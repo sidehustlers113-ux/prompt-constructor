@@ -695,63 +695,6 @@
     </div>
   </div>
 
-  <!-- Help panel — Data Converter -->
-  <div id="help-panel-dc" aria-hidden="true" aria-label="Help">
-    <div class="help-hdr">
-      <span>Help — CSV &amp; Excel to JSON</span>
-      <button id="help-close-dc" onclick="zdtHelpDC.close()" aria-label="Close help">&times;</button>
-    </div>
-    <div class="help-section">
-      <h3>How to use</h3>
-      <p>Drop a CSV or Excel file onto the upload zone. The tool parses it locally using SheetJS — no upload to any server. Configure your schema, then click Convert.</p>
-    </div>
-    <div class="help-section">
-      <h3>Column types</h3>
-      <ul>
-        <li><span class="ht ht-role">Auto</span> Detects number, boolean, or string automatically</li>
-        <li><span class="ht ht-format">Number</span> Force-casts to float — empty cells become null</li>
-        <li><span class="ht ht-tone">Boolean</span> Maps true / false / yes / no / 1 / 0</li>
-        <li><span class="ht ht-custom">String</span> Keeps everything as text</li>
-      </ul>
-    </div>
-    <div class="help-section">
-      <h3>Output structure</h3>
-      <p><strong style="color:var(--text)">Array</strong> — default, outputs <code style="color:var(--teal);font-size:11px">[{&hellip;}, {&hellip;}]</code>.<br><br><strong style="color:var(--text)">Keyed</strong> — pick a primary-key column to index by: <code style="color:var(--teal);font-size:11px">{"key": {&hellip;}}</code></p>
-    </div>
-    <div class="help-section">
-      <h3>Privacy</h3>
-      <p>Your file is read by the browser's File API and never transmitted. No account. No logging. No telemetry.</p>
-    </div>
-  </div>
-
-  <!-- Help panel — MCP & Skill Generator -->
-  <div id="help-panel-mcp" aria-hidden="true" aria-label="Help">
-    <div class="help-hdr">
-      <span>Help — MCP &amp; Skill Generator</span>
-      <button id="help-close-mcp" onclick="zdtHelpMCP.close()" aria-label="Close help">&times;</button>
-    </div>
-    <div class="help-section">
-      <h3>How to use</h3>
-      <p>Optionally paste a description of your tool, click Continue, then fill in the name, description, and parameters. Choose a scaffold type and click Generate.</p>
-    </div>
-    <div class="help-section">
-      <h3>Scaffold types</h3>
-      <ul>
-        <li><span class="ht ht-role">TypeScript</span> MCP SDK server with Zod schema — Claude Desktop &amp; Claude Code</li>
-        <li><span class="ht ht-tone">Python</span> FastMCP decorator pattern — <code style="color:var(--teal);font-size:11px">pip install fastmcp</code></li>
-        <li><span class="ht ht-task">SKILL.md</span> Claude Code skill file — drop in <code style="color:var(--teal);font-size:11px">.claude/skills/</code></li>
-      </ul>
-    </div>
-    <div class="help-section">
-      <h3>Parameters</h3>
-      <p>Add one row per input. Name and type drive the schema. Description becomes a <code style="color:var(--teal);font-size:11px">.describe()</code> annotation (TypeScript) or docstring (Python).</p>
-    </div>
-    <div class="help-section">
-      <h3>Privacy</h3>
-      <p>All scaffold generation is deterministic and runs entirely in your browser. No tool description or parameter data is sent to any server. No LLM call is made.</p>
-    </div>
-  </div>
-
   <script>
     // Visual Prompt Constructor v1.3 — 2026-06-21
     const STORAGE_KEY = 'visual-prompt-constructor-state';
@@ -2566,6 +2509,63 @@ Example: 'A tool that searches a PostgreSQL database given a table name and a WH
   </script>
   </section>
 </main>
+
+<!-- Help panel — Data Converter -->
+<div id="help-panel-dc" aria-hidden="true" aria-label="Help">
+  <div class="help-hdr">
+    <span>Help — CSV &amp; Excel to JSON</span>
+    <button id="help-close-dc" onclick="zdtHelpDC.close()" aria-label="Close help">&times;</button>
+  </div>
+  <div class="help-section">
+    <h3>How to use</h3>
+    <p>Drop a CSV or Excel file onto the upload zone. The tool parses it locally using SheetJS — no upload to any server. Configure your schema, then click Convert.</p>
+  </div>
+  <div class="help-section">
+    <h3>Column types</h3>
+    <ul>
+      <li><span class="ht ht-role">Auto</span> Detects number, boolean, or string automatically</li>
+      <li><span class="ht ht-format">Number</span> Force-casts to float — empty cells become null</li>
+      <li><span class="ht ht-tone">Boolean</span> Maps true / false / yes / no / 1 / 0</li>
+      <li><span class="ht ht-custom">String</span> Keeps everything as text</li>
+    </ul>
+  </div>
+  <div class="help-section">
+    <h3>Output structure</h3>
+    <p><strong style="color:var(--text)">Array</strong> — default, outputs <code style="color:var(--teal);font-size:11px">[{&hellip;}, {&hellip;}]</code>.<br><br><strong style="color:var(--text)">Keyed</strong> — pick a primary-key column to index by: <code style="color:var(--teal);font-size:11px">{"key": {&hellip;}}</code></p>
+  </div>
+  <div class="help-section">
+    <h3>Privacy</h3>
+    <p>Your file is read by the browser's File API and never transmitted. No account. No logging. No telemetry.</p>
+  </div>
+</div>
+
+<!-- Help panel — MCP & Skill Generator -->
+<div id="help-panel-mcp" aria-hidden="true" aria-label="Help">
+  <div class="help-hdr">
+    <span>Help — MCP &amp; Skill Generator</span>
+    <button id="help-close-mcp" onclick="zdtHelpMCP.close()" aria-label="Close help">&times;</button>
+  </div>
+  <div class="help-section">
+    <h3>How to use</h3>
+    <p>Optionally paste a description of your tool, click Continue, then fill in the name, description, and parameters. Choose a scaffold type and click Generate.</p>
+  </div>
+  <div class="help-section">
+    <h3>Scaffold types</h3>
+    <ul>
+      <li><span class="ht ht-role">TypeScript</span> MCP SDK server with Zod schema — Claude Desktop &amp; Claude Code</li>
+      <li><span class="ht ht-tone">Python</span> FastMCP decorator pattern — <code style="color:var(--teal);font-size:11px">pip install fastmcp</code></li>
+      <li><span class="ht ht-task">SKILL.md</span> Claude Code skill file — drop in <code style="color:var(--teal);font-size:11px">.claude/skills/</code></li>
+    </ul>
+  </div>
+  <div class="help-section">
+    <h3>Parameters</h3>
+    <p>Add one row per input. Name and type drive the schema. Description becomes a <code style="color:var(--teal);font-size:11px">.describe()</code> annotation (TypeScript) or docstring (Python).</p>
+  </div>
+  <div class="help-section">
+    <h3>Privacy</h3>
+    <p>All scaffold generation is deterministic and runs entirely in your browser. No tool description or parameter data is sent to any server. No LLM call is made.</p>
+  </div>
+</div>
 
 <footer id="site-footer">
   <span>zerodatatools</span>
