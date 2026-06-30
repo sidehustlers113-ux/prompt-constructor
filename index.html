@@ -1,0 +1,2641 @@
+<!-- zerodatatools-site/index.html — v1.0 — 2026-06-29 — Unified portfolio: Prompt Constructor, Data Converter, MCP Generator -->
+<!-- NOTE: Tailwind CDN included to support Prompt Constructor internal markup -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>zerodatatools — Free browser utilities. No account. No server.</title>
+  <meta name="description" content="Free browser utilities that process your data locally. Visual Prompt Constructor, CSV to JSON Converter, MCP Scaffold Generator. No signup. No server. No exceptions." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://sidehustlers113-ux.github.io/zerodatatools-site/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="zerodatatools — Free browser utilities. No account. No server." />
+  <meta property="og:description" content="Browser utilities that process your data locally. No account. No server. No exceptions." />
+  <meta property="og:url" content="https://sidehustlers113-ux.github.io/zerodatatools-site/" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@zerodatatool" />
+  <meta name="twitter:creator" content="@zerodatatool" />
+  <meta name="twitter:title" content="zerodatatools — Free browser utilities. No account. No server." />
+  <meta name="twitter:description" content="Browser utilities that process your data locally. No account. No server. No exceptions." />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "zerodatatools",
+    "url": "https://sidehustlers113-ux.github.io/zerodatatools-site/",
+    "description": "Free browser utilities. No account. No server. No exceptions.",
+    "creator": { "@type": "Organization", "name": "zerodatatools" }
+  }
+  </script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='100' height='100' fill='white'/%3E%3Cline x1='15' y1='15' x2='50' y2='50' stroke='black' stroke-width='6' stroke-linecap='square'/%3E%3Cline x1='50' y1='50' x2='85' y2='85' stroke='black' stroke-width='6' stroke-linecap='square'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%2300B4D8' stroke-width='13' mask='url(%23m)'/%3E%3C/svg%3E" />
+
+  <!-- CDN scripts from individual tools — PLACEHOLDER: injected by build script -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-base:       #1A2326;
+      --bg-panel:      #2A3235;
+      --bg-elevated:   #323B3E;
+      --bg-input:      #2A3235;
+      --border:        #3D4548;
+      --border-focus:  #00B4D8;
+      --teal:          #00B4D8;
+      --teal-hover:    #0096B4;
+      --teal-bright:   #0096B4;
+      --teal-dim:      #005f7a;
+      --teal-glow:     rgba(0,180,216,0.12);
+      --text:          #F0F4F4;
+      --text-dim:      #9EADB5;
+      --text-primary:  #F0F4F4;
+      --text-secondary:#9EADB5;
+      --text-muted:    #889296;
+      --success:       #2dd4bf;
+      --amber:         #d97706;
+      --amber-glow:    rgba(217,119,6,0.12);
+      --amber-dim:     #7c3c00;
+      --font: 'Segoe UI','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --mono: 'Cascadia Code','Fira Code','Consolas',monospace;
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+    html { font-size: 14px; }
+    body { background: var(--bg-base); color: var(--text); font-family: var(--font); }
+
+    /* Shell header */
+    #site-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 52px;
+    }
+    .site-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .site-logo svg { width: 24px; height: 24px; }
+    .site-logo span { color: var(--teal); font-size: 18px; font-weight: 700;
+                      letter-spacing: -0.04em; font-family: Arial, Helvetica, sans-serif; }
+    #site-nav { display: flex; gap: 4px; }
+    .nav-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 13px; padding: 6px 12px;
+      border-radius: 4px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-btn:hover { color: var(--text); background: var(--bg-elevated); }
+    .nav-btn.active { color: var(--teal); background: var(--bg-elevated); }
+
+    /* Sections */
+    main { padding-top: 52px; }
+    main > section { display: none; }
+    main > section.active { display: block; }
+
+    /* Home landing */
+    #home {
+      min-height: calc(100vh - 52px);
+      flex-direction: column; align-items: center;
+      justify-content: center; padding: 48px 24px; gap: 40px;
+    }
+    main > #home.active { display: flex; }
+    .home-headline { text-align: center; }
+    .home-headline h1 { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 10px; }
+    .home-headline p  { font-size: 15px; color: var(--text-dim); }
+    .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; width: 100%; max-width: 860px; }
+    .tool-card {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .tool-card h2 { font-size: 15px; font-weight: 600; color: var(--text); }
+    .tool-card p  { font-size: 13px; color: var(--text-dim); line-height: 1.5; flex: 1; }
+    .tool-card button {
+      background: var(--teal); color: #1A2326; border: none;
+      border-radius: 4px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; align-self: flex-start;
+    }
+    .tool-card button:hover { background: var(--teal-hover); }
+    .home-privacy { font-size: 12px; color: var(--text-muted); text-align: center; }
+
+    /* Site footer */
+    #site-footer {
+      border-top: 1px solid var(--border); padding: 12px 24px;
+      text-align: center; color: var(--text-muted); font-size: 11px;
+    }
+    #site-footer a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+    #site-footer a:hover { color: var(--teal); }
+
+    /* Suppress inner tool chrome — shell header provides navigation */
+    #prompt-constructor .suite-nav,
+    #prompt-constructor nav[aria-label="Tool suite"],
+    #data-converter .suite-nav,
+    #mcp-skill-generator .suite-nav { display: none !important; }
+    /* Hide embedded prompt-constructor's own fixed header (conflicts with shell header) */
+    #prompt-constructor #site-header { display: none !important; }
+    /* Remove the embedded tool's body-level top padding now that its header is hidden */
+    #prompt-constructor #app-main { padding-top: 0 !important; }
+
+    /* Ko-fi header icon */
+    #kofi-hdr {
+      display: flex; align-items: center; gap: 5px;
+      color: var(--text-muted); text-decoration: none; font-size: 12px;
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: 4px;
+      margin-left: 8px; white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #kofi-hdr:hover { color: var(--teal); border-color: var(--teal-dim); }
+    /* Hide redundant inner eyebrow/brand-lockup when tools are embedded in shell */
+    #data-converter .brand-lockup,
+    #mcp-skill-generator .brand-lockup { display: none; }
+
+    /* Ko-fi toast — fixed bottom-right overlay */
+    .kofi-toast {
+      position: fixed; bottom: 24px; right: 24px; width: 300px; z-index: 990;
+      background: #1E2D31;
+      border: 1px solid var(--teal);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      max-height: 0; opacity: 0; transform: translateY(10px);
+      transition: max-height 0.3s ease-out, opacity 0.25s ease-out, transform 0.25s ease-out;
+      pointer-events: none;
+    }
+    .kofi-toast.visible {
+      max-height: 200px; opacity: 1; transform: translateY(0); pointer-events: auto;
+    }
+    .kofi-toast-inner { padding: 14px 16px; display: flex; align-items: flex-start; gap: 10px; }
+    .kofi-toast-body { flex: 1; min-width: 0; }
+    .kofi-toast-body p { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 6px; }
+    .kofi-toast-body small { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 10px; }
+    .kofi-btns { display: flex; gap: 8px; }
+    .kofi-btn-secondary {
+      border: 1px solid var(--teal); color: var(--teal); background: transparent;
+      border-radius: 4px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+      transition: background 0.15s, color 0.15s; text-decoration: none; display: inline-block;
+    }
+    .kofi-btn-secondary:hover { background: var(--teal); color: #1A2326; }
+    .kofi-btn-primary {
+      background: var(--teal); color: #1A2326; border: none;
+      border-radius: 4px; padding: 5px 12px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; text-decoration: none; display: inline-block;
+    }
+    .kofi-btn-primary:hover { background: var(--teal-hover); }
+    .kofi-dismiss {
+      background: none; border: none; color: var(--text-muted); font-size: 18px;
+      cursor: pointer; line-height: 1; padding: 0; transition: color 0.15s; flex-shrink: 0;
+    }
+    .kofi-dismiss:hover { color: var(--text); }
+
+    /* ── Unified tool footer ─────────────────────────────────────────── */
+    .tool-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 24px; border-top: 1px solid var(--border);
+      background: var(--bg-base); flex-shrink: 0;
+      font-size: 11px; color: var(--text-muted); gap: 16px;
+    }
+    .tool-footer a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+    .tool-footer a:hover { color: var(--teal); }
+
+    /* Strip redundant page-headers — shell header owns the tool title */
+    #data-converter .page-header,
+    #mcp-skill-generator .page-header { display: none !important; }
+    #data-converter .main-container,
+    #mcp-skill-generator .main-container { padding-top: 28px !important; }
+
+    /* Prompt Constructor: hide logo+title from inner header, keep format toggle */
+    #prompt-constructor .flex-none.h-14 > div:first-child { display: none !important; }
+    #prompt-constructor .flex-none.h-14 { justify-content: flex-end !important; gap: 8px; }
+
+    /* ── Mobile nav ─────────────────────────────────────────────────────── */
+    #mobile-menu-btn {
+      display: none; background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 20px; padding: 4px 8px;
+      line-height: 1; transition: color 0.15s;
+    }
+    #mobile-menu-btn:hover { color: var(--text); }
+    #mobile-menu {
+      display: none; position: fixed; top: 52px; left: 0; right: 0; z-index: 998;
+      background: var(--bg-panel); border-bottom: 1px solid var(--border);
+      flex-direction: column; padding: 8px 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    #mobile-menu.open { display: flex; }
+    .mobile-menu-item {
+      display: block; padding: 12px 24px; font-size: 13px;
+      color: var(--text-dim); text-decoration: none; border: none;
+      background: none; cursor: pointer; text-align: left; width: 100%;
+      transition: color 0.15s, background 0.15s;
+    }
+    .mobile-menu-item:hover { color: var(--text); background: var(--bg-elevated); }
+    .mobile-menu-item.active { color: var(--teal); }
+    .mobile-menu-divider {
+      border: none; border-top: 1px solid var(--border); margin: 6px 0;
+    }
+    .mobile-menu-kofi {
+      display: flex; align-items: center; gap: 6px;
+      padding: 12px 24px; font-size: 13px; color: var(--text-muted);
+      text-decoration: none; transition: color 0.15s;
+    }
+    .mobile-menu-kofi:hover { color: var(--teal); }
+
+    @media (max-width: 640px) {
+      #site-nav, #kofi-hdr { display: none; }
+      #mobile-menu-btn { display: block; }
+      /* Title bar text shrinks on narrow screens */
+      #tool-title-name { font-size: 10px; }
+      /* Tool footers stack on mobile */
+      .tool-footer { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 16px; }
+      /* Home tool cards: one per row */
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Tool title bar — fixed strip between header and content */
+    #tool-title-bar {
+      position: fixed; top: 52px; left: 0; right: 0; z-index: 999;
+      height: 36px; background: var(--bg-base);
+      border-bottom: 1px solid var(--border);
+      display: none; align-items: center; padding: 0 24px;
+    }
+    body.tool-active #tool-title-bar { display: flex; }
+    #tool-title-name {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--teal);
+    }
+
+    /* Push content below header + title bar when a tool is active */
+    body.tool-active main { padding-top: 88px; }
+
+    /* Footer anchored to bottom in scrollable tools — scoped to .active to avoid overriding display:none on inactive sections */
+    #data-converter.active, #mcp-skill-generator.active {
+      display: flex; flex-direction: column; min-height: calc(100vh - 88px);
+    }
+    #data-converter .main-container,
+    #mcp-skill-generator .main-container { flex: 1; }
+
+    /* Prompt Constructor — fit viewport below both fixed bars */
+    #prompt-constructor #app { height: calc(100vh - 88px) !important; }
+
+    /* Help panel — right-side drawer */
+    #help-panel {
+      position: fixed; top: 88px; right: 0; bottom: 0; width: 320px;
+      background: var(--bg-panel); border-left: 1px solid var(--border);
+      z-index: 500; transform: translateX(100%);
+      transition: transform 0.25s ease;
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+    #help-panel.open { transform: translateX(0); }
+    .help-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted); flex-shrink: 0;
+    }
+    #help-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 18px; cursor: pointer; line-height: 1; padding: 0;
+      transition: color 0.15s;
+    }
+    #help-close:hover { color: var(--text); }
+    .help-section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+    .help-section h3 {
+      font-size: 10px; font-weight: 700; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .help-section p { font-size: 12px; color: var(--text-dim); line-height: 1.65; }
+    .help-section ul { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .help-section li { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+    .ht { font-weight: 600; font-size: 10px; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+    .ht-role        { color:#00B4D8; background:rgba(0,180,216,0.1); }
+    .ht-context     { color:#5B8DB8; background:rgba(91,141,184,0.1); }
+    .ht-task        { color:#7B68EE; background:rgba(123,104,238,0.1); }
+    .ht-constraints { color:#E07B54; background:rgba(224,123,84,0.1); }
+    .ht-format      { color:#5BAA6E; background:rgba(91,170,110,0.1); }
+    .ht-tone        { color:#C4A35A; background:rgba(196,163,90,0.1); }
+    .ht-examples    { color:#9E7BB5; background:rgba(158,123,181,0.1); }
+    .ht-custom      { color:#9EADB5; background:rgba(158,173,181,0.1); }
+
+    /* Help toggle button in prompt constructor header */
+    #help-toggle {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    #help-toggle:hover { color: var(--teal); border-color: var(--teal-dim); }
+    #help-toggle.active { color: var(--teal); border-color: var(--teal); background: var(--teal-glow); }
+  </style>
+</head>
+<body>
+
+<header id="site-header">
+  <a class="site-logo" href="#home" onclick="navigate('home')">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs><mask id="sm"><rect width="100" height="100" fill="white"/>
+        <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+        <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+      </mask></defs>
+      <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#sm)"/>
+    </svg>
+    <span>zero.</span>
+  </a>
+  <nav id="site-nav">
+    <button class="nav-btn" data-section="home">Home</button>
+    <button class="nav-btn" data-section="prompt-constructor">Prompt Constructor</button>
+    <button class="nav-btn" data-section="data-converter">Data Converter</button>
+    <button class="nav-btn" data-section="mcp-skill-generator">MCP Generator</button>
+  </nav>
+  <a id="kofi-hdr" href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener" aria-label="Support on Ko-fi">☕ Ko-fi</a>
+  <button id="mobile-menu-btn" aria-label="Open navigation" aria-expanded="false" onclick="zdtMobileMenu.toggle()">☰</button>
+</header>
+
+<nav id="mobile-menu" aria-label="Mobile navigation">
+  <button class="mobile-menu-item" data-section="home" onclick="zdtMobileMenu.go('home')">Home</button>
+  <button class="mobile-menu-item" data-section="prompt-constructor" onclick="zdtMobileMenu.go('prompt-constructor')">Prompt Constructor</button>
+  <button class="mobile-menu-item" data-section="data-converter" onclick="zdtMobileMenu.go('data-converter')">Data Converter</button>
+  <button class="mobile-menu-item" data-section="mcp-skill-generator" onclick="zdtMobileMenu.go('mcp-skill-generator')">MCP Generator</button>
+  <hr class="mobile-menu-divider">
+  <a class="mobile-menu-kofi" href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">☕ Support on Ko-fi</a>
+</nav>
+
+<div id="tool-title-bar" aria-live="polite">
+  <span id="tool-title-name"></span>
+</div>
+
+<main>
+  <section id="home">
+    <div class="home-headline">
+      <h1>Browser utilities that process your data locally.</h1>
+      <p>No account. No server. No exceptions.</p>
+    </div>
+    <div class="tool-grid">
+      <div class="tool-card">
+        <h2>Visual Prompt Constructor</h2>
+        <p>Build structured LLM system prompts with typed blocks. Role, context, constraints, format — composed visually.</p>
+        <button onclick="navigate('prompt-constructor')">Open tool</button>
+      </div>
+      <div class="tool-card">
+        <h2>CSV &amp; Excel to JSON</h2>
+        <p>Convert CSV and Excel files to precisely typed JSON. Schema control, type enforcement, primary key indexing.</p>
+        <button onclick="navigate('data-converter')">Open tool</button>
+      </div>
+      <div class="tool-card">
+        <h2>MCP &amp; Skill Generator</h2>
+        <p>Generate production-ready MCP server boilerplate (TypeScript, Python FastMCP) or Claude SKILL.md files.</p>
+        <button onclick="navigate('mcp-skill-generator')">Open tool</button>
+      </div>
+    </div>
+    <p class="home-privacy">All processing happens in your browser. Nothing is transmitted to any server. Ever.</p>
+  </section>
+
+  <section id="prompt-constructor">
+    <!--to <div id="app"> — SEO content was a flex sibling
+       consuming visible height, leaving <main> with ~144px. SEO now lives outside #app.
+     - BUG FIX: replaced mobile-hidden class with body[data-mobile-tab] CSS selectors — #panel-preview
+       { display:flex!important } (ID specificity 1,0,0) was beating .mobile-hidden (class 0,1,0), 
+       so panel-preview stayed visible on all tabs. Attribute selectors eliminate the conflict.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-site-verification" content="ibiKb6fInB5OHEd92jUba7W3716X_sa7sXfd887LqNE" />
+  <title>AI System Prompt Builder — Visual Prompt Constructor | Free, No Login</title>
+  <meta name="description" content="Build structured LLM system prompts with drag-and-drop blocks. Compose role, context, constraints, and format layers visually. Runs 100% in your browser. No signup, no data collection.">
+  <meta name="keywords" content="system prompt builder, AI prompt constructor, LLM prompt tool online, ChatGPT prompt builder, Claude prompt builder, prompt engineering tool, system prompt generator free">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://sidehustlers113-ux.github.io/prompt-constructor/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AI System Prompt Builder — Visual Prompt Constructor">
+  <meta property="og:description" content="Build structured LLM system prompts with drag-and-drop blocks. Compose role, context, constraints, and format layers visually. Runs entirely in your browser.">
+  <meta property="og:url" content="https://sidehustlers113-ux.github.io/prompt-constructor/">
+  <meta property="og:image" content="https://sidehustlers113-ux.github.io/prompt-constructor/assets/og-visual-prompt-constructor.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI System Prompt Builder — Visual Prompt Constructor">
+  <meta name="twitter:description" content="Build structured LLM system prompts with drag-and-drop blocks. Runs entirely in your browser. Free, no login.">
+  <meta name="twitter:image" content="https://sidehustlers113-ux.github.io/prompt-constructor/assets/og-visual-prompt-constructor.png">
+  <meta name="twitter:creator" content="@zerodatatool">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Visual Prompt Constructor","description":"Build structured LLM system prompts with drag-and-drop blocks. Runs entirely in your browser.","url":"https://sidehustlers113-ux.github.io/prompt-constructor/","applicationCategory":"UtilitiesApplication","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Block type left-border accents (UIUX.md palette) */
+    .block-role        { border-left:3px solid #00B4D8; }
+    .block-context     { border-left:3px solid #5B8DB8; }
+    .block-task        { border-left:3px solid #7B68EE; }
+    .block-constraints { border-left:3px solid #E07B54; }
+    .block-format      { border-left:3px solid #5BAA6E; }
+    .block-tone        { border-left:3px solid #C4A35A; }
+    .block-examples    { border-left:3px solid #9E7BB5; }
+    .block-custom      { border-left:3px solid #9EADB5; }
+    /* Block type label colors */
+    .label-role        { color:#00B4D8; }
+    .label-context     { color:#5B8DB8; }
+    .label-task        { color:#7B68EE; }
+    .label-constraints { color:#E07B54; }
+    .label-format      { color:#5BAA6E; }
+    .label-tone        { color:#C4A35A; }
+    .label-examples    { color:#9E7BB5; }
+    .label-custom      { color:#9EADB5; }
+    /* Palette hover accents */
+    .palette-role:hover        { border-color:#00B4D8!important;color:#F0F4F4!important; }
+    .palette-context:hover     { border-color:#5B8DB8!important;color:#F0F4F4!important; }
+    .palette-task:hover        { border-color:#7B68EE!important;color:#F0F4F4!important; }
+    .palette-constraints:hover { border-color:#E07B54!important;color:#F0F4F4!important; }
+    .palette-format:hover      { border-color:#5BAA6E!important;color:#F0F4F4!important; }
+    .palette-tone:hover        { border-color:#C4A35A!important;color:#F0F4F4!important; }
+    .palette-examples:hover    { border-color:#9E7BB5!important;color:#F0F4F4!important; }
+    .palette-custom:hover      { border-color:#9EADB5!important;color:#F0F4F4!important; }
+    /* Drag feedback */
+    .drag-over-top    { border-top:2px solid #00B4D8!important; }
+    .drag-over-bottom { border-bottom:2px solid #00B4D8!important; }
+    .dragging         { opacity:0.35; }
+    .drag-handle      { cursor:grab; user-select:none; }
+    .drag-handle:active { cursor:grabbing; }
+    /* Block states */
+    .block-disabled   { opacity:0.4; }
+    textarea          { min-height:72px; overflow:hidden; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#3D4548; border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:#889296; }
+
+    /* ── MOBILE LAYOUT ─────────────────────────────────────────────
+       Panels are absolutely positioned inside #app-main.
+       body[data-mobile-tab] attribute controls which panel is visible.
+       No class-based toggling — avoids all CSS specificity conflicts.
+    ── */
+    @media (max-width:767px) {
+      #app-main { position:relative; }
+
+      #panel-add,
+      #panel-blocks,
+      #panel-preview {
+        position:absolute;
+        top:0; left:0; right:0; bottom:0;
+        width:100%;
+        overflow-y:auto;
+        /* Reset desktop flex constraints */
+        flex:none!important;
+        min-width:0!important;
+        border-right:none!important;
+        border-left:none!important;
+      }
+
+      /* Preview needs flex-col for its pinned action footer */
+      #panel-preview { display:flex; flex-direction:column; overflow-y:hidden; }
+
+      /* Default: show blocks panel, hide others */
+      #panel-add     { display:none; }
+      #panel-preview { display:none; }
+
+      /* Tab switching via data attribute on body — no specificity conflict */
+      body[data-mobile-tab="add"]     #panel-blocks  { display:none; }
+      body[data-mobile-tab="add"]     #panel-preview { display:none; }
+      body[data-mobile-tab="add"]     #panel-add     { display:block; }
+
+      body[data-mobile-tab="preview"] #panel-blocks  { display:none; }
+      body[data-mobile-tab="preview"] #panel-add     { display:none; }
+      body[data-mobile-tab="preview"] #panel-preview { display:flex; flex-direction:column; }
+
+      body[data-mobile-tab="blocks"]  #panel-add     { display:none; }
+      body[data-mobile-tab="blocks"]  #panel-preview { display:none; }
+      body[data-mobile-tab="blocks"]  #panel-blocks  { display:flex; flex-direction:column; }
+
+      /* Extra bottom padding so content clears the fixed action bar */
+      #blockCanvas { padding-bottom:88px; }
+    }
+  </style>
+</head>
+
+<!-- body: plain container — no viewport classes here -->
+<body class="bg-[#1A2326] text-[#F0F4F4] font-mono antialiased" data-mobile-tab="blocks">
+
+  <!-- ╔══════════════════════════════════════════════════════════════
+       ║  #app: the viewport-locked shell — h-screen overflow-hidden
+       ║  SEO content lives OUTSIDE this div so it never affects layout
+       ╚══════════════════════════════════════════════════════════════ -->
+  <div id="app" class="h-screen overflow-hidden flex flex-col">
+
+    <!-- SUITE NAV -->
+    <nav style="background:#111518;border-bottom:1px solid #2A3235;padding:0 24px;height:36px;display:flex;align-items:center;gap:16px;font-size:12px;flex-shrink:0;" role="navigation" aria-label="Tool suite">
+      <a href="https://sidehustlers113-ux.github.io" style="display:flex;align-items:center;gap:7px;text-decoration:none;flex-shrink:0;" aria-label="zerodatatools home">
+        <svg width="18" height="18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <mask id="nav-logo-mask">
+              <rect width="100" height="100" fill="white"/>
+              <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+              <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+            </mask>
+          </defs>
+          <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#nav-logo-mask)"/>
+        </svg>
+        <span style="font-size:13px;font-weight:700;color:#00B4D8;letter-spacing:-0.04em;font-family:Arial,'Helvetica Neue',sans-serif;">zero.</span>
+      </a>
+      <span style="color:#2A3235;user-select:none;">|</span>
+      <a href="https://sidehustlers113-ux.github.io/prompt-constructor/" style="color:#00B4D8;background:rgba(0,180,216,0.12);border:1px solid #005f7a;text-decoration:none;padding:4px 10px;border-radius:4px;" aria-current="page" title="Visual Prompt Constructor">Prompt Constructor</a>
+      <span style="color:#2A3235;user-select:none;">|</span>
+      <a href="https://sidehustlers113-ux.github.io/data-converter/" style="color:#9EADB5;text-decoration:none;padding:4px 10px;border-radius:4px;transition:color 0.15s,background 0.15s;" title="CSV &amp; Excel to JSON Converter" onmouseover="this.style.color='#F0F4F4';this.style.background='#323B3E'" onmouseout="this.style.color='#9EADB5';this.style.background='transparent'">Data Converter</a>
+      <span style="color:#2A3235;user-select:none;">|</span>
+      <a href="https://sidehustlers113-ux.github.io/mcp-skill-generator/" style="color:#9EADB5;text-decoration:none;padding:4px 10px;border-radius:4px;transition:color 0.15s,background 0.15s;" title="MCP Server &amp; Skill Generator" onmouseover="this.style.color='#F0F4F4';this.style.background='#323B3E'" onmouseout="this.style.color='#9EADB5';this.style.background='transparent'">MCP &amp; Skill Gen</a>
+    </nav>
+
+    <!-- HEADER: h-14, never wraps -->
+    <header class="flex-none h-14 border-b border-[#2A3235] flex items-center justify-between px-4 sm:px-6 shrink-0 bg-[#1A2326]">
+      <!-- Logo mark + tool name -->
+      <div class="flex items-center gap-2.5 min-w-0 mr-4">
+        <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+          <defs>
+            <mask id="zdt-logo-mask">
+              <rect width="100" height="100" fill="white"/>
+              <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+              <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+            </mask>
+          </defs>
+          <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#zdt-logo-mask)"/>
+        </svg>
+        <h1 class="text-xl font-semibold tracking-tight text-[#F0F4F4] whitespace-nowrap truncate">Visual Prompt Constructor</h1>
+      </div>
+      <!-- Format selector -->
+      <div class="flex items-center gap-0.5 bg-[#2A3235] border border-[#3D4548] rounded-md p-0.5 shrink-0">
+        <button id="fmt-markdown" class="fmt-btn text-xs px-3 py-1.5 rounded transition-colors">MD</button>
+        <button id="fmt-xml"      class="fmt-btn text-xs px-3 py-1.5 rounded transition-colors">XML</button>
+        <button id="fmt-plain"    class="fmt-btn text-xs px-3 py-1.5 rounded transition-colors">Plain</button>
+      </div>
+      <button id="help-toggle" onclick="zdtHelp.toggle()" title="Help &amp; block types" aria-label="Help">?</button>
+    </header>
+
+    <!-- MOBILE TAB NAV: visible only on mobile (md:hidden) -->
+    <nav class="flex-none flex border-b border-[#2A3235] md:hidden shrink-0">
+      <button class="mobile-tab flex-1 py-2.5 text-xs uppercase tracking-wider transition-colors" data-tab="blocks">Blocks</button>
+      <button class="mobile-tab flex-1 py-2.5 text-xs uppercase tracking-wider transition-colors" data-tab="preview">Preview</button>
+      <button class="mobile-tab flex-1 py-2.5 text-xs uppercase tracking-wider transition-colors" data-tab="add">Add Block</button>
+    </nav>
+
+    <!-- MAIN: three-panel flex layout -->
+    <main id="app-main" class="flex-1 overflow-hidden flex min-h-0">
+
+      <!-- SIDEBAR: 208px fixed on desktop, full-screen on mobile via CSS -->
+      <aside id="panel-add" class="flex-none w-52 border-r border-[#2A3235] flex flex-col bg-[#1A2326]">
+        <div class="flex-1 overflow-y-auto p-4">
+          <div class="text-xs font-medium uppercase tracking-wider text-[#9EADB5] mb-3">Add Block</div>
+          <div id="blockPalette" class="flex flex-col gap-1.5"></div>
+        </div>
+        <div class="flex-none border-t border-[#2A3235] p-4">
+          <button id="clearAllBtn" class="w-full border border-[#3D4548] text-[#9EADB5] hover:border-[#C0392B] hover:text-[#C0392B] text-xs py-2 rounded-md transition-colors">Clear All</button>
+        </div>
+      </aside>
+
+      <!-- CANVAS: fills remaining width, internal scroll -->
+      <section id="panel-blocks" class="flex-1 overflow-y-auto min-w-0 flex flex-col">
+        <!-- Empty state: fills height when no blocks -->
+        <div id="emptyState" class="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6 py-10">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3D4548" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <p class="text-[#9EADB5] text-sm font-medium">Canvas is empty</p>
+          <p class="text-[#889296] text-xs hidden md:block">Click a block type in the left panel to start building your prompt.</p>
+          <p class="text-[#889296] text-xs md:hidden">Tap the <span class="text-[#00B4D8] font-medium">Add Block</span> tab above to start building.</p>
+        </div>
+        <!-- Block count bar: hidden when canvas is empty -->
+        <div id="blockCountBar" class="hidden flex-none px-5 pt-3 flex items-center justify-between">
+          <span id="blockCountLabel" class="text-xs text-[#9EADB5] uppercase tracking-wider"></span>
+        </div>
+        <!-- Block list -->
+        <div id="blockCanvas" class="p-5 space-y-3 hidden"></div>
+      </section>
+
+      <!-- PREVIEW PANEL: 320px fixed on desktop, flex-col, actions pinned to bottom -->
+      <aside id="panel-preview" class="flex-none w-80 border-l border-[#2A3235] flex flex-col bg-[#1A2326]">
+        <!-- Scrollable preview content -->
+        <div class="flex-1 overflow-y-auto p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium uppercase tracking-wider text-[#9EADB5]">Live Preview</span>
+            <span id="charCount" class="text-xs text-[#889296] tabular-nums">0 chars</span>
+          </div>
+          <pre id="promptPreview" class="text-xs text-[#F0F4F4] whitespace-pre-wrap font-mono leading-relaxed"><span class="text-[#889296]">Add blocks to see your prompt here.</span></pre>
+        </div>
+        <!-- PINNED ACTIONS: always visible, never scrolls away -->
+        <div class="flex-none border-t border-[#2A3235] p-4 flex flex-col gap-2">
+          <button id="copyBtn" class="w-full bg-[#00B4D8] hover:bg-[#0096B4] text-white text-sm font-medium py-2.5 rounded-md transition-colors">Copy Prompt</button>
+          <button id="downloadBtn" class="w-full border border-[#3D4548] text-[#9EADB5] hover:border-[#00B4D8] hover:text-[#F0F4F4] text-sm py-2 rounded-md transition-colors">Download .txt</button>
+          <div class="kofi-toast" id="kofi-prompt-constructor">
+            <div class="kofi-toast-inner">
+              <div class="kofi-toast-body">
+                <p>Saved you time? Keep it free.</p>
+                <small>zerodatatools is free, forever.</small>
+                <div class="kofi-btns">
+                  <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">
+                    <button class="kofi-btn-secondary">$1 tip</button>
+                  </a>
+                  <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">
+                    <button class="kofi-btn-primary">$3 if it helped</button>
+                  </a>
+                </div>
+              </div>
+              <button class="kofi-dismiss" onclick="zdtKofi.hide(this.closest('.kofi-toast'))">&times;</button>
+            </div>
+          </div>
+          <div id="statusBar" class="text-xs text-[#9EADB5] min-h-4 text-center"></div>
+        </div>
+      </aside>
+
+    </main>
+
+    <footer class="tool-footer">
+      <span>🔒 100% client-side &middot; no data transmitted</span>
+      <span>
+        <a href="https://x.com/zerodatatool" target="_blank" rel="noopener">@zerodatatool</a>
+        &middot;
+        <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">Ko-fi</a>
+      </span>
+    </footer>
+  </div><!-- /#app — end viewport shell -->
+
+  <!-- MOBILE FIXED ACTION BAR: fixed to viewport bottom, outside #app -->
+  <div id="mobileActionBar" class="fixed bottom-0 left-0 right-0 p-4 bg-[#1A2326] border-t border-[#2A3235] md:hidden z-20">
+    <button id="mobileCopyBtn" class="w-full bg-[#00B4D8] hover:bg-[#0096B4] text-white py-3 rounded-md text-sm font-medium transition-colors">Copy Prompt</button>
+  </div>
+
+  <!-- Help panel — slide-in drawer -->
+  <div id="help-panel" aria-hidden="true" aria-label="Help">
+    <div class="help-hdr">
+      <span>Help &amp; Block Types</span>
+      <button id="help-close" onclick="zdtHelp.close()" aria-label="Close help">&times;</button>
+    </div>
+    <div class="help-section">
+      <h3>How it works</h3>
+      <p>Click a block type in the left palette to add it to the canvas. Type your content, drag to reorder, toggle blocks on/off without deleting. The live preview updates instantly. Copy or download when done — your session auto-saves to localStorage.</p>
+    </div>
+    <div class="help-section">
+      <h3>Block types</h3>
+      <ul>
+        <li><span class="ht ht-role">Role</span> Who the AI is and its persona</li>
+        <li><span class="ht ht-context">Context</span> Background the AI needs</li>
+        <li><span class="ht ht-task">Task</span> What the AI must do</li>
+        <li><span class="ht ht-constraints">Constraints</span> What it must not do</li>
+        <li><span class="ht ht-format">Format</span> How to structure output</li>
+        <li><span class="ht ht-tone">Tone</span> Voice and register</li>
+        <li><span class="ht ht-examples">Examples</span> Sample input/output pairs</li>
+        <li><span class="ht ht-custom">Custom</span> Free-form block for anything else</li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>Output formats</h3>
+      <p><strong style="color:var(--text)">MD</strong> — Markdown headers (<code style="color:var(--teal);font-size:11px">## Role</code>). <strong style="color:var(--text)">XML</strong> — XML tags (<code style="color:var(--teal);font-size:11px">&lt;role&gt;</code>). <strong style="color:var(--text)">Plain</strong> — labelled sections, no markup.</p>
+    </div>
+    <div class="help-section">
+      <h3>Privacy</h3>
+      <p>Runs entirely in your browser. No content is ever sent to a server. No account required. No telemetry of any kind.</p>
+    </div>
+  </div>
+
+  <script>
+    // Visual Prompt Constructor v1.3 — 2026-06-21
+    const STORAGE_KEY = 'visual-prompt-constructor-state';
+    const BLOCK_TYPES = {
+      role:        { label:'Role / Persona',   tag:'role',        hint:'Who the AI is', placeholder:'You are a senior product manager with 10 years of SaaS experience. You are direct, data-driven, and write for a technical audience.' },
+      context:     { label:'Context',          tag:'context',     hint:'Background the AI needs', placeholder:'The user is working on a B2B SaaS product. They have defined their ICP and are now evaluating pricing models for a new tier.' },
+      task:        { label:'Task / Objective', tag:'task',        hint:'What the AI must do', placeholder:"Your task is to analyze the user's input and produce a structured recommendation. Focus on actionable next steps, not general advice." },
+      constraints: { label:'Constraints',      tag:'constraints', hint:'What the AI must NOT do', placeholder:'Do not make assumptions beyond what the user provides.\nAlways cite your reasoning.\nNever recommend a specific vendor by name.\nKeep responses under 400 words.' },
+      format:      { label:'Output Format',    tag:'format',      hint:'How the response is structured', placeholder:'Respond using this structure:\n1. Summary (2-3 sentences)\n2. Analysis (bullet points, max 5)\n3. Recommended next steps (numbered list, max 3)' },
+      tone:        { label:'Tone & Style',     tag:'tone',        hint:'Voice and register', placeholder:'Write in a professional but direct tone. Avoid jargon. Use short paragraphs. Prefer active voice. Do not hedge unnecessarily.' },
+      examples:    { label:'Examples',         tag:'examples',    hint:'Sample inputs and outputs', placeholder:'Input: "We are considering switching from per-seat to usage-based pricing."\n\nOutput: "Usage-based pricing aligns cost with value delivery but introduces revenue unpredictability..."' },
+      custom:      { label:'Custom Block',     tag:'custom',      hint:'Anything else', placeholder:'Add any additional context, instructions, guardrails, or background here.' }
+    };
+    const app = { blocks:[], format:'markdown', dragSrcId:null, dragPosition:'after', mobileTab:'blocks' };
+    let saveTimer = null;
+
+    // State
+    function saveState() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({blocks:app.blocks,format:app.format})); } catch(e){}
+      }, 400);
+    }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (Array.isArray(s.blocks)) app.blocks = s.blocks;
+        if (s.format && ['markdown','xml','plain'].includes(s.format)) app.format = s.format;
+      } catch(e) { app.blocks=[]; app.format='markdown'; }
+    }
+
+    // Block management
+    function generateId() { return 'b-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+    function addBlock(type) {
+      const block = {id:generateId(),type:type,content:'',title:'',enabled:true};
+      app.blocks.push(block);
+      renderBlocks(); updatePreview(); saveState();
+      requestAnimationFrame(function() {
+        const ta = document.querySelector('#blockCanvas textarea[data-id="'+block.id+'"]');
+        if (ta) ta.focus();
+      });
+    }
+    function removeBlock(id) {
+      app.blocks = app.blocks.filter(function(b){return b.id!==id;});
+      renderBlocks(); updatePreview(); saveState();
+    }
+    function toggleBlock(id) {
+      const b = app.blocks.find(function(b){return b.id===id;});
+      if (!b) return;
+      b.enabled = !b.enabled;
+      const w = document.querySelector('.block-item[data-id="'+id+'"]');
+      if (w) w.classList.toggle('block-disabled', !b.enabled);
+      const btn = document.querySelector('.toggle-btn[data-id="'+id+'"]');
+      if (btn) applyToggleStyle(btn, b.enabled);
+      updatePreview(); saveState();
+    }
+    function updateBlockContent(id, content) {
+      const b = app.blocks.find(function(b){return b.id===id;});
+      if (b) { b.content=content; updatePreview(); saveState(); }
+    }
+    function updateBlockTitle(id, title) {
+      const b = app.blocks.find(function(b){return b.id===id;});
+      if (b) { b.title=title; updatePreview(); saveState(); }
+    }
+    function applyToggleStyle(btn, enabled) {
+      btn.textContent = enabled ? 'ON' : 'OFF';
+      btn.className = enabled
+        ? 'toggle-btn text-xs px-2 py-0.5 rounded border border-[#00B4D8] text-[#00B4D8] transition-colors'
+        : 'toggle-btn text-xs px-2 py-0.5 rounded border border-[#3D4548] text-[#889296] transition-colors';
+    }
+
+    // Prompt composition
+    function composePrompt() {
+      const active = app.blocks.filter(function(b){return b.enabled;});
+      if (!active.length) return '';
+      const parts = active.map(function(block) {
+        const def = BLOCK_TYPES[block.type];
+        const content = block.content.trim();
+        if (!content) return null;
+        const heading = block.type==='custom' ? (block.title.trim()||'Custom') : def.label;
+        switch(app.format) {
+          case 'markdown': return '## '+heading+'\n'+content;
+          case 'xml': {
+            const tag = block.type==='custom'
+              ? (block.title.trim()||'custom').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'')||'custom'
+              : def.tag;
+            return '<'+tag+'>\n'+content+'\n</'+tag+'>';
+          }
+          case 'plain': return heading.toUpperCase()+'\n'+Array(heading.length+1).join('─')+'\n'+content;
+          default: return content;
+        }
+      }).filter(Boolean);
+      return parts.join('\n\n');
+    }
+
+    // Rendering
+    function renderBlocks() {
+      const canvas   = document.getElementById('blockCanvas');
+      const empty    = document.getElementById('emptyState');
+      const countBar = document.getElementById('blockCountBar');
+      const countLbl = document.getElementById('blockCountLabel');
+      if (!app.blocks.length) {
+        canvas.innerHTML=''; canvas.classList.add('hidden'); empty.classList.remove('hidden');
+        if (countBar) countBar.classList.add('hidden');
+        return;
+      }
+      empty.classList.add('hidden'); canvas.classList.remove('hidden');
+      if (countBar && countLbl) {
+        const total  = app.blocks.length;
+        const active = app.blocks.filter(function(b){return b.enabled;}).length;
+        const suffix = active < total ? ' ('+active+' active)' : '';
+        countLbl.textContent = total + (total===1?' block':' blocks') + suffix;
+        countBar.classList.remove('hidden');
+      }
+      canvas.innerHTML = app.blocks.map(buildBlockHTML).join('');
+      attachBlockEvents();
+    }
+    function buildBlockHTML(block) {
+      const def = BLOCK_TYPES[block.type];
+      const dc  = block.enabled ? '' : 'block-disabled';
+      const tc  = block.enabled
+        ? 'toggle-btn text-xs px-2 py-0.5 rounded border border-[#00B4D8] text-[#00B4D8] transition-colors'
+        : 'toggle-btn text-xs px-2 py-0.5 rounded border border-[#3D4548] text-[#889296] transition-colors';
+      const tl  = block.enabled ? 'ON' : 'OFF';
+      const customTitle = block.type==='custom'
+        ? '<input type="text" class="custom-title-input w-full bg-transparent text-[#9EADB5] text-xs border-b border-[#3D4548] focus:border-[#00B4D8] focus:outline-none pb-1 mb-2.5 placeholder-[#889296]" placeholder="Block title (e.g. Guardrails, Persona)" value="'+escAttr(block.title)+'" data-id="'+block.id+'">'
+        : '';
+      return '<div class="group block-item block-'+block.type+' '+dc+' bg-[#2A3235] border border-[#3D4548] rounded-md transition-opacity" draggable="true" data-id="'+block.id+'">'
+        +'<div class="flex items-center justify-between px-3 py-2 border-b border-[#2A3235]">'
+          +'<div class="flex items-center gap-2 min-w-0">'
+            +'<span class="drag-handle text-[#889296] hover:text-[#9EADB5] text-lg leading-none transition-colors" title="Drag to reorder">&#8998;</span>'
+            +'<span class="text-xs font-medium uppercase tracking-wider label-'+block.type+' truncate">'+esc(def.label)+'</span>'
+          +'</div>'
+          +'<div class="flex items-center gap-2 ml-2 shrink-0">'
+            +'<button class="'+tc+'" data-id="'+block.id+'">'+tl+'</button>'
+            +'<button class="delete-btn opacity-100 md:opacity-0 md:group-hover:opacity-100 text-[#889296] hover:text-[#C0392B] text-xl leading-none transition-all" data-id="'+block.id+'" title="Remove block">&times;</button>'
+          +'</div>'
+        +'</div>'
+        +'<div class="px-3 py-2.5">'+customTitle
+          +'<textarea class="w-full bg-transparent text-sm text-[#F0F4F4] resize-none focus:outline-none placeholder-[#889296] leading-relaxed font-mono" placeholder="'+escAttr(def.placeholder)+'" data-id="'+block.id+'" rows="3">'+esc(block.content)+'</textarea>'
+        +'</div>'
+      +'</div>';
+    }
+    function attachBlockEvents() {
+      document.querySelectorAll('#blockCanvas textarea').forEach(function(el) {
+        autoResize(el);
+        el.addEventListener('input', function(){ autoResize(this); updateBlockContent(this.dataset.id, this.value); });
+      });
+      document.querySelectorAll('#blockCanvas .custom-title-input').forEach(function(el) {
+        el.addEventListener('input', function(){ updateBlockTitle(this.dataset.id, this.value); });
+      });
+      document.querySelectorAll('#blockCanvas .toggle-btn').forEach(function(el) {
+        el.addEventListener('click', function(){ toggleBlock(this.dataset.id); });
+      });
+      document.querySelectorAll('#blockCanvas .delete-btn').forEach(function(el) {
+        el.addEventListener('click', function(){ removeBlock(this.dataset.id); });
+      });
+      document.querySelectorAll('#blockCanvas .block-item').forEach(function(el) {
+        el.addEventListener('dragstart', onDragStart);
+        el.addEventListener('dragend',   onDragEnd);
+        el.addEventListener('dragover',  onDragOver);
+        el.addEventListener('dragleave', onDragLeave);
+        el.addEventListener('drop',      onDrop);
+      });
+    }
+    function autoResize(el) { el.style.height='auto'; el.style.height=Math.max(72,el.scrollHeight)+'px'; }
+    function updatePreview() {
+      const prompt = composePrompt();
+      const preview = document.getElementById('promptPreview');
+      const cc = document.getElementById('charCount');
+      if (!prompt) {
+        preview.innerHTML='<span class="text-[#889296]">Add blocks to see your prompt here.</span>';
+        cc.textContent='0 chars';
+      } else {
+        preview.textContent=prompt;
+        cc.textContent=prompt.length.toLocaleString()+' chars';
+      }
+    }
+
+    // Drag and drop
+    function onDragStart(e) {
+      app.dragSrcId=e.currentTarget.dataset.id;
+      e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',app.dragSrcId);
+      const el=e.currentTarget; requestAnimationFrame(function(){el.classList.add('dragging');});
+    }
+    function onDragEnd(e)  { e.currentTarget.classList.remove('dragging'); clearDropIndicators(); app.dragSrcId=null; }
+    function onDragOver(e) {
+      e.preventDefault(); e.dataTransfer.dropEffect='move';
+      const t=e.currentTarget; if(t.dataset.id===app.dragSrcId) return;
+      clearDropIndicators();
+      const r=t.getBoundingClientRect();
+      app.dragPosition=e.clientY<r.top+r.height/2?'before':'after';
+      t.classList.add(app.dragPosition==='before'?'drag-over-top':'drag-over-bottom');
+    }
+    function onDragLeave(e) {
+      if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drag-over-top','drag-over-bottom');
+    }
+    function onDrop(e) {
+      e.preventDefault(); clearDropIndicators();
+      const tid=e.currentTarget.dataset.id;
+      if (!app.dragSrcId||app.dragSrcId===tid) return;
+      const si=app.blocks.findIndex(function(b){return b.id===app.dragSrcId;});
+      const removed=app.blocks.splice(si,1)[0];
+      const ti=app.blocks.findIndex(function(b){return b.id===tid;});
+      app.blocks.splice(app.dragPosition==='before'?ti:ti+1,0,removed);
+      renderBlocks(); updatePreview(); saveState();
+    }
+    function clearDropIndicators() {
+      document.querySelectorAll('.block-item').forEach(function(el){el.classList.remove('drag-over-top','drag-over-bottom');});
+    }
+
+    // Format selector
+    function setFormat(format) {
+      app.format=format;
+      ['markdown','xml','plain'].forEach(function(f){
+        const btn=document.getElementById('fmt-'+f); if(!btn) return;
+        btn.className=f===format
+          ? 'fmt-btn text-xs px-3 py-1.5 rounded transition-colors bg-[#00B4D8] text-white'
+          : 'fmt-btn text-xs px-3 py-1.5 rounded transition-colors text-[#9EADB5] hover:text-[#F0F4F4]';
+      });
+      updatePreview();
+    }
+
+    // Mobile tab navigation — sets body[data-mobile-tab] for CSS-driven panel switching
+    function setMobileTab(tab) {
+      app.mobileTab=tab;
+      document.body.dataset.mobileTab=tab;
+      document.querySelectorAll('.mobile-tab').forEach(function(btn){
+        const active=btn.dataset.tab===tab;
+        btn.className=active
+          ? 'mobile-tab flex-1 py-2.5 text-xs uppercase tracking-wider transition-colors border-b-2 border-[#00B4D8] text-[#00B4D8]'
+          : 'mobile-tab flex-1 py-2.5 text-xs uppercase tracking-wider transition-colors text-[#889296]';
+      });
+      // Hide fixed action bar on preview tab (preview panel has its own Copy button)
+      const bar=document.getElementById('mobileActionBar');
+      if (bar) bar.classList.toggle('hidden', tab==='preview');
+    }
+
+    // Clipboard and download
+    async function copyToClipboard(text, btn) {
+      if (!text) { setStatus('Nothing to copy — add blocks with content first.'); return; }
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig=btn.textContent; btn.textContent='Copied.'; btn.disabled=true;
+        setStatus('Copied to clipboard.');
+        zdtKofi.show(document.getElementById('kofi-prompt-constructor'));
+        setTimeout(function(){btn.textContent=orig;btn.disabled=false;},1500);
+      } catch(err) {
+        btn.textContent='Failed — copy manually.';
+        setTimeout(function(){btn.textContent='Copy Prompt';btn.disabled=false;},2000);
+      }
+    }
+    function downloadAsText(text) {
+      if (!text) { setStatus('Nothing to download — add blocks with content first.'); return; }
+      const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='system-prompt.txt';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      setStatus('Downloaded as system-prompt.txt');
+    }
+    let statusTimer=null;
+    function setStatus(msg) {
+      const bar=document.getElementById('statusBar'); if(bar) bar.textContent=msg;
+      clearTimeout(statusTimer); statusTimer=setTimeout(function(){if(bar)bar.textContent='';},2500);
+    }
+    // Palette
+    function renderPalette() {
+      const palette=document.getElementById('blockPalette');
+      palette.innerHTML=Object.entries(BLOCK_TYPES).map(function(e){
+        const type=e[0], def=e[1];
+        return '<button class="palette-'+type+' add-block-btn w-full text-left border border-[#3D4548] bg-[#2A3235] text-[#9EADB5] rounded-md px-3 py-2.5 text-xs transition-all" data-type="'+type+'">'
+          +'<span class="font-medium label-'+type+' block mb-0.5">'+esc(def.label)+'</span>'
+          +'<span class="block text-[#5A6970] text-[10px] leading-tight">'+esc(def.hint)+'</span>'
+          +'</button>';
+      }).join('');
+      palette.querySelectorAll('.add-block-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){addBlock(this.dataset.type);});
+      });
+    }
+
+    // Utility
+    function esc(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function escAttr(str) { return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', function() {
+      loadState(); renderPalette(); renderBlocks(); updatePreview(); setFormat(app.format);
+      document.getElementById('fmt-markdown').addEventListener('click',function(){setFormat('markdown');saveState();});
+      document.getElementById('fmt-xml').addEventListener('click',function(){setFormat('xml');saveState();});
+      document.getElementById('fmt-plain').addEventListener('click',function(){setFormat('plain');saveState();});
+      document.getElementById('copyBtn').addEventListener('click',function(){copyToClipboard(composePrompt(),this);});
+      document.getElementById('downloadBtn').addEventListener('click',function(){downloadAsText(composePrompt());});
+      document.getElementById('mobileCopyBtn').addEventListener('click',function(){copyToClipboard(composePrompt(),this);});
+      document.getElementById('clearAllBtn').addEventListener('click',function(){
+        if (!app.blocks.length) return;
+        if (window.confirm('Clear all blocks? This cannot be undone.')) {
+          app.blocks=[]; renderBlocks(); updatePreview(); saveState();
+        }
+      });
+      document.querySelectorAll('.mobile-tab').forEach(function(btn){
+        btn.addEventListener('click',function(){setMobileTab(this.dataset.tab);});
+      });
+      setMobileTab('blocks');
+    });
+  </script>
+  </section>
+
+  <section id="data-converter">
+  <style>
+    /* ── data-converter component styles ── */
+    .suite-nav {
+      background: #111518; border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 44px;
+      display: flex; align-items: center; gap: 20px;
+      font-size: 12px; letter-spacing: 0.02em; flex-shrink: 0;
+    }
+    .suite-nav .suite-brand {
+      display: flex; align-items: center; gap: 7px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .suite-nav .suite-wordmark {
+      font-size: 13px; font-weight: 700; color: var(--teal);
+      letter-spacing: -0.04em; font-family: Arial,'Helvetica Neue',sans-serif;
+    }
+    .suite-nav .nav-divider { color: var(--border); user-select: none; }
+    .suite-nav a.nav-link {
+      color: var(--text-secondary); text-decoration: none;
+      padding: 4px 10px; border-radius: var(--radius);
+      transition: color 0.15s, background 0.15s;
+    }
+    .suite-nav a.nav-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .suite-nav a.nav-link.active {
+      color: var(--teal); background: var(--teal-glow); border: 1px solid var(--teal-dim);
+    }
+    .page-header {
+      padding: 40px 24px 28px; max-width: 860px; margin: 0 auto; width: 100%;
+    }
+    .page-header .brand-lockup { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+    .page-header .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--teal);
+    }
+    .page-header h1 {
+      font-size: 26px; font-weight: 700; color: var(--text-primary);
+      letter-spacing: -0.02em; line-height: 1.2;
+    }
+    .page-header h1 span { color: var(--teal); }
+    .page-header .subtitle { margin-top: 8px; color: var(--text-secondary); font-size: 13.5px; max-width: 580px; }
+    .main-container { max-width: 860px; margin: 0 auto; padding: 0 24px 60px; width: 100%; flex: 1; }
+    .section-label { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .section-label .step-badge {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--teal-dim); border: 1px solid var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--teal); flex-shrink: 0;
+    }
+    .section-label h2 {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary);
+    }
+    .section-spacer { margin-top: 28px; }
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius-lg);
+      background: var(--bg-panel); padding: 52px 32px;
+      text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragging {
+      border-color: var(--teal); background: var(--bg-elevated);
+      box-shadow: 0 0 0 4px var(--teal-glow), inset 0 0 32px var(--teal-glow);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 36px; margin-bottom: 14px; line-height: 1; }
+    .drop-zone h3 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+    .drop-zone p { font-size: 12.5px; color: var(--text-muted); }
+    .drop-zone p strong { color: var(--teal); font-weight: 600; }
+    .file-loaded-bar {
+      display: none; align-items: center; gap: 10px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 12px 16px; margin-top: 10px;
+    }
+    .file-loaded-bar.visible { display: flex; }
+    .file-loaded-bar .file-icon { font-size: 18px; }
+    .file-loaded-bar .file-info { flex: 1; }
+    .file-loaded-bar .file-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .file-loaded-bar .file-meta { font-size: 11.5px; color: var(--text-muted); }
+    .file-loaded-bar .change-btn {
+      font-size: 11.5px; color: var(--teal);
+      background: none; border: 1px solid var(--teal-dim);
+      padding: 4px 10px; border-radius: var(--radius); cursor: pointer; transition: background 0.15s;
+    }
+    .file-loaded-bar .change-btn:hover { background: var(--teal-glow); }
+    #config-panel { display: none; }
+    #config-panel.visible { display: block; }
+    .config-card {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .config-card + .config-card { margin-top: 12px; }
+    .config-card-header {
+      padding: 14px 20px; background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+    }
+    .config-card-header .card-icon { font-size: 15px; }
+    .config-card-header .card-title {
+      font-size: 12.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary);
+    }
+    .config-card-header .card-desc { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+    .config-card-body { padding: 18px 20px; }
+    select {
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text-primary);
+      font-family: var(--font); font-size: 13px; padding: 7px 10px;
+      outline: none; cursor: pointer; transition: border-color 0.15s;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23889296'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    select:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-glow); }
+    .primary-key-select { width: 100%; max-width: 360px; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .checkbox-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s; user-select: none;
+    }
+    .checkbox-item:hover { border-color: var(--border-focus); background: var(--bg-elevated); }
+    .checkbox-item input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--teal); flex-shrink: 0; cursor: pointer; }
+    .checkbox-item .col-label { font-size: 12px; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .batch-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+    .batch-btn {
+      font-size: 11.5px; color: var(--text-muted);
+      background: none; border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: var(--radius);
+      cursor: pointer; font-family: var(--font); transition: color 0.15s, border-color 0.15s;
+    }
+    .batch-btn:hover { color: var(--teal); border-color: var(--teal-dim); }
+    .type-table { width: 100%; border-collapse: collapse; }
+    .type-table th {
+      text-align: left; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+      padding: 0 10px 10px; border-bottom: 1px solid var(--border);
+    }
+    .type-table td { padding: 6px 10px; border-bottom: 1px solid var(--bg-elevated); vertical-align: middle; }
+    .type-table tr:last-child td { border-bottom: none; }
+    .col-name-cell {
+      font-size: 11.5px; background: var(--bg-input);
+      display: inline-block; padding: 2px 7px; border-radius: 3px;
+      border: 1px solid var(--border); color: var(--teal); font-family: var(--mono);
+    }
+    .sample-val { font-size: 11.5px; color: var(--text-muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+    .type-select { width: 130px; }
+    .convert-section { margin-top: 20px; }
+    .convert-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--teal); color: #fff; border: none;
+      padding: 13px 30px; border-radius: var(--radius);
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      letter-spacing: 0.03em; cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+    .convert-btn:hover {
+      background: var(--teal-bright); box-shadow: 0 4px 20px rgba(0,180,216,0.35); transform: translateY(-1px);
+    }
+    .convert-btn:active { transform: translateY(0); }
+    .convert-btn .btn-icon { font-size: 16px; }
+    #output-panel { display: none; margin-top: 28px; }
+    #output-panel.visible { display: block; }
+    .output-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .output-header {
+      padding: 12px 16px; background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;
+    }
+    .output-meta { flex: 1; display: flex; align-items: center; gap: 10px; }
+    .output-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+    .stat-pill {
+      font-size: 11px; color: var(--teal); background: var(--teal-glow);
+      border: 1px solid var(--teal-dim); padding: 2px 8px; border-radius: 20px; font-weight: 600;
+    }
+    .copy-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--teal); color: #fff; border: none;
+      padding: 8px 18px; border-radius: var(--radius);
+      font-family: var(--font); font-size: 12.5px; font-weight: 700;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .copy-btn:hover { background: var(--teal-bright); }
+    .copy-btn.copied { background: #1e4a32; color: var(--success); }
+    .output-code {
+      padding: 20px; max-height: 420px; overflow-y: auto; overflow-x: auto;
+      font-family: var(--mono); font-size: 12px; line-height: 1.7; white-space: pre;
+      background: #111518; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .output-code::-webkit-scrollbar { width: 6px; height: 6px; }
+    .output-code::-webkit-scrollbar-track { background: transparent; }
+    .output-code::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .j-key  { color: #7ec8e3; } .j-str  { color: #a3d977; } .j-num  { color: #f0a070; }
+    .j-bool { color: #cc99cd; } .j-null { color: #889296; } .j-punct { color: var(--text-muted); }
+    footer {
+      background: #111518; border-top: 1px solid var(--border);
+      padding: 16px 24px; display: flex; align-items: center;
+      justify-content: space-between; gap: 16px; flex-shrink: 0;
+    }
+    .privacy-badge { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); }
+    .privacy-badge .lock { color: var(--teal); font-size: 14px; }
+    .footer-right { font-size: 11.5px; color: var(--text-muted); }
+    .footer-right a { color: var(--text-muted); text-decoration: none; }
+    .footer-right a:hover { color: var(--teal); }
+    @media (max-width: 600px) {
+      .suite-nav { gap: 10px; font-size: 11px; }
+      .page-header { padding: 24px 16px 20px; }
+      .main-container { padding: 0 16px 40px; }
+      .checkbox-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+      footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .type-table .sample-val { display: none; }
+      .config-card-header .card-desc { display: none; }
+    }
+  </style>
+    <!-- Suite Nav -->
+  <nav class="suite-nav" role="navigation" aria-label="Tool suite">
+    <a href="https://sidehustlers113-ux.github.io" class="suite-brand" aria-label="zerodatatools home">
+      <svg width="18" height="18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <mask id="nav-logo-mask">
+            <rect width="100" height="100" fill="white"/>
+            <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+            <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+          </mask>
+        </defs>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#nav-logo-mask)"/>
+      </svg>
+      <span class="suite-wordmark">zero.</span>
+    </a>
+    <span class="nav-divider">|</span>
+    <a href="https://sidehustlers113-ux.github.io/prompt-constructor/" class="nav-link" title="Visual Prompt Constructor">Prompt Constructor</a>
+    <span class="nav-divider">|</span>
+    <a href="https://sidehustlers113-ux.github.io/data-converter/" class="nav-link active" aria-current="page" title="CSV &amp; Excel to JSON Converter">Data Converter</a>
+    <span class="nav-divider">|</span>
+    <a href="https://sidehustlers113-ux.github.io/mcp-skill-generator/" class="nav-link" title="MCP Server &amp; Skill Generator">MCP &amp; Skill Gen</a>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header" role="banner">
+    <div class="brand-lockup">
+      <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <mask id="hdr-logo-mask">
+            <rect width="100" height="100" fill="white"/>
+            <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+            <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+          </mask>
+        </defs>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#hdr-logo-mask)"/>
+      </svg>
+      <span class="eyebrow">zerodatatools &middot; Utility #2</span>
+    </div>
+    <h1>CSV &amp; Excel <span>&rarr; JSON</span></h1>
+    <p class="subtitle">
+      Convert structured files to precisely typed JSON &mdash; define your schema, enforce types, pick your output structure. Runs entirely in your browser.
+    </p>
+  </header>
+
+  <main class="main-container" role="main">
+
+    <!-- Step 1 -->
+    <div class="section-label">
+      <div class="step-badge">1</div>
+      <h2>Load Your File</h2>
+    </div>
+    <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Drop zone for CSV or Excel files">
+      <input type="file" id="file-input" accept=".csv,.xls,.xlsx" aria-label="Select CSV or Excel file" />
+      <div class="drop-icon">📂</div>
+      <h3>Drop a file here, or click to browse</h3>
+      <p>Accepts <strong>.csv</strong>, <strong>.xls</strong>, and <strong>.xlsx</strong> &nbsp;&middot;&nbsp; All processing is local</p>
+    </div>
+    <div class="file-loaded-bar" id="file-loaded-bar">
+      <span class="file-icon">📄</span>
+      <div class="file-info">
+        <div class="file-name" id="file-name-display">—</div>
+        <div class="file-meta" id="file-meta-display">—</div>
+      </div>
+      <button class="change-btn" id="change-file-btn" type="button">Change file</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="config-panel">
+      <div class="section-spacer"></div>
+      <div class="section-label">
+        <div class="step-badge">2</div>
+        <h2>Configure Schema</h2>
+      </div>
+
+      <!-- Primary Key -->
+      <div class="config-card">
+        <div class="config-card-header">
+          <span class="card-icon">🗝️</span>
+          <span class="card-title">Primary Key / Output Structure</span>
+          <span class="card-desc">Controls top-level JSON shape</span>
+        </div>
+        <div class="config-card-body">
+          <select class="primary-key-select" id="primary-key-select" aria-label="Select primary key column">
+            <option value="__none__">None — Output as flat array [ {…}, {…} ]</option>
+          </select>
+          <p style="margin-top:10px;font-size:12px;color:var(--text-muted);">
+            Choose a column to index by. Output becomes
+            <code style="color:var(--teal);font-family:var(--mono);">{ "key_value": {row}, … }</code>
+          </p>
+        </div>
+      </div>
+
+      <!-- Attribute Selector -->
+      <div class="config-card" style="margin-top:12px;">
+        <div class="config-card-header">
+          <span class="card-icon">☑️</span>
+          <span class="card-title">Attribute Selector</span>
+          <span class="card-desc">Uncheck columns to exclude from output</span>
+        </div>
+        <div class="config-card-body">
+          <div class="batch-actions">
+            <button class="batch-btn" id="select-all-btn" type="button">Select All</button>
+            <button class="batch-btn" id="deselect-all-btn" type="button">Deselect All</button>
+          </div>
+          <div class="checkbox-grid" id="checkbox-grid"></div>
+        </div>
+      </div>
+
+      <!-- Type Enforcement -->
+      <div class="config-card" style="margin-top:12px;">
+        <div class="config-card-header">
+          <span class="card-icon">🔢</span>
+          <span class="card-title">Type Enforcement</span>
+          <span class="card-desc">Force-cast values per column</span>
+        </div>
+        <div class="config-card-body" style="padding:0;">
+          <div style="overflow-x:auto;">
+            <table class="type-table" id="type-table" aria-label="Type enforcement controls">
+              <thead>
+                <tr>
+                  <th style="width:200px;padding-top:14px;padding-bottom:10px;padding-left:20px;">Column</th>
+                  <th style="padding-top:14px;">Sample Value</th>
+                  <th style="padding-top:14px;padding-right:20px;">Type Cast</th>
+                </tr>
+              </thead>
+              <tbody id="type-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Convert -->
+      <div class="convert-section">
+        <button class="convert-btn" id="convert-btn" type="button">
+          <span class="btn-icon">⚙️</span>
+          Convert to JSON
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="output-panel">
+      <div class="section-label section-spacer">
+        <div class="step-badge">3</div>
+        <h2>JSON Output</h2>
+      </div>
+      <div class="output-card">
+        <div class="output-header">
+          <div class="output-meta">
+            <span class="output-title">Result</span>
+            <span class="stat-pill" id="output-stat">—</span>
+          </div>
+          <button class="copy-btn" id="copy-btn" type="button">📋 Copy JSON</button>
+        </div>
+        <div class="output-code" id="output-code" role="region" aria-label="JSON output" aria-live="polite"></div>
+      </div>
+
+      <div class="kofi-toast" id="kofi-data-converter">
+        <div class="kofi-toast-inner">
+          <div class="kofi-toast-body">
+            <p>Saved you time? Keep it free.</p>
+            <small>zerodatatools is free, forever.</small>
+            <div class="kofi-btns">
+              <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">
+                <button class="kofi-btn-secondary">$1 tip</button>
+              </a>
+              <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">
+                <button class="kofi-btn-primary">$3 if it helped</button>
+              </a>
+            </div>
+          </div>
+          <button class="kofi-dismiss" onclick="zdtKofi.hide(this.closest('.kofi-toast'))">&times;</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="tool-footer">
+    <span>🔒 100% client-side &middot; no data transmitted</span>
+    <span>
+      <a href="https://x.com/zerodatatool" target="_blank" rel="noopener">@zerodatatool</a>
+      &middot;
+      <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">Ko-fi</a>
+    </span>
+  </footer>
+
+  <script>
+  (() => {
+    'use strict';
+    let parsedRows  = [];
+    let headers     = [];
+    let currentJSON = '';
+
+    const dropZone       = document.getElementById('drop-zone');
+    const fileInput      = document.getElementById('file-input');
+    const fileLoadedBar  = document.getElementById('file-loaded-bar');
+    const fileNameDisp   = document.getElementById('file-name-display');
+    const fileMetaDisp   = document.getElementById('file-meta-display');
+    const changeFileBtn  = document.getElementById('change-file-btn');
+    const configPanel    = document.getElementById('config-panel');
+    const primaryKeySel  = document.getElementById('primary-key-select');
+    const checkboxGrid   = document.getElementById('checkbox-grid');
+    const typeTableBody  = document.getElementById('type-table-body');
+    const convertBtn     = document.getElementById('convert-btn');
+    const outputPanel    = document.getElementById('output-panel');
+    const outputCode     = document.getElementById('output-code');
+    const outputStat     = document.getElementById('output-stat');
+    const copyBtn        = document.getElementById('copy-btn');
+    const selectAllBtn   = document.getElementById('select-all-btn');
+    const deselectAllBtn = document.getElementById('deselect-all-btn');
+
+    // Drag & drop
+    ['dragenter', 'dragover'].forEach(function(ev) {
+      dropZone.addEventListener(ev, function(e) { e.preventDefault(); dropZone.classList.add('dragging'); });
+    });
+    ['dragleave', 'drop'].forEach(function(ev) {
+      dropZone.addEventListener(ev, function(e) { e.preventDefault(); dropZone.classList.remove('dragging'); });
+    });
+    dropZone.addEventListener('drop', function(e) {
+      var f = e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    });
+    dropZone.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+    changeFileBtn.addEventListener('click', function() {
+      fileInput.value = '';
+      fileInput.click();
+    });
+
+    function handleFile(file) {
+      var ext = file.name.split('.').pop().toLowerCase();
+      var label = ext === 'csv' ? 'CSV' : 'Excel';
+      fileNameDisp.textContent = file.name;
+      fileMetaDisp.textContent = label + ' · ' + (file.size / 1024).toFixed(1) + ' KB';
+      fileLoadedBar.classList.add('visible');
+      if (ext === 'csv') parseCSV(file);
+      else if (ext === 'xls' || ext === 'xlsx') parseXLSX(file);
+      else alert('Unsupported file type. Please use .csv, .xls, or .xlsx');
+    }
+
+    function parseCSV(file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(res) {
+          if (!res.data.length) { alert('CSV appears empty or has no data rows.'); return; }
+          parsedRows = res.data;
+          headers    = res.meta.fields || Object.keys(res.data[0] || {});
+          fileMetaDisp.textContent += ' · ' + parsedRows.length.toLocaleString() + ' rows · ' + headers.length + ' columns';
+          buildConfig();
+        },
+        error: function(err) { alert('CSV parse error: ' + err.message); }
+      });
+    }
+
+    function parseXLSX(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var wb   = XLSX.read(e.target.result, { type: 'array' });
+          var ws   = wb.Sheets[wb.SheetNames[0]];
+          var data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+          if (!data.length) { alert('Spreadsheet appears empty.'); return; }
+          parsedRows = data;
+          headers    = Object.keys(data[0] || {});
+          fileMetaDisp.textContent += ' · ' + parsedRows.length.toLocaleString() + ' rows · ' + headers.length + ' columns';
+          buildConfig();
+        } catch (err) {
+          alert('Excel parse error: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function buildConfig() {
+      // Primary key options
+      primaryKeySel.innerHTML = '<option value="__none__">None — Output as flat array [ {…}, {…} ]</option>';
+      headers.forEach(function(h) {
+        var opt = document.createElement('option');
+        opt.value       = h;
+        opt.textContent = h;
+        primaryKeySel.appendChild(opt);
+      });
+
+      // Checkboxes
+      checkboxGrid.innerHTML = '';
+      headers.forEach(function(h) {
+        var lbl  = document.createElement('label');
+        lbl.className = 'checkbox-item';
+        var cb   = document.createElement('input');
+        cb.type  = 'checkbox';
+        cb.checked      = true;
+        cb.dataset.col  = h;
+        var span = document.createElement('span');
+        span.className  = 'col-label';
+        span.textContent = h;
+        span.title      = h;
+        lbl.appendChild(cb);
+        lbl.appendChild(span);
+        checkboxGrid.appendChild(lbl);
+      });
+
+      // Type table
+      typeTableBody.innerHTML = '';
+      var sampleRow = parsedRows[0] || {};
+      headers.forEach(function(h) {
+        var sampleVal    = sampleRow[h] !== undefined ? String(sampleRow[h]) : '';
+        var detected     = detectType(sampleVal);
+        var displaySample = sampleVal.length > 22 ? sampleVal.slice(0, 22) + '…' : sampleVal;
+        var tr           = document.createElement('tr');
+        tr.innerHTML =
+          '<td style="padding-left:20px;"><span class="col-name-cell">' + escHtml(h) + '</span></td>' +
+          '<td><span class="sample-val" title="' + escAttr(sampleVal) + '">' +
+            (displaySample ? escHtml(displaySample) : '<em style="color:var(--text-muted)">empty</em>') +
+          '</span></td>' +
+          '<td style="padding-right:20px;">' +
+            '<select class="type-select" data-col="' + escAttr(h) + '" aria-label="Type for ' + escAttr(h) + '">' +
+              '<option value="auto"'    + (detected === 'auto'    ? ' selected' : '') + '>Auto-detect</option>' +
+              '<option value="number"' + (detected === 'number'  ? ' selected' : '') + '>Force Number</option>' +
+              '<option value="string"' + (detected === 'string'  ? ' selected' : '') + '>Force String</option>' +
+              '<option value="boolean"'+ (detected === 'boolean' ? ' selected' : '') + '>Force Boolean</option>' +
+            '</select>' +
+          '</td>';
+        typeTableBody.appendChild(tr);
+      });
+
+      configPanel.classList.add('visible');
+      outputPanel.classList.remove('visible');
+      currentJSON = '';
+    }
+
+    function detectType(val) {
+      if (!val || val.trim() === '') return 'auto';
+      if (!isNaN(val) && val.trim() !== '') return 'number';
+      var lower = val.toLowerCase().trim();
+      if (lower === 'true' || lower === 'false') return 'boolean';
+      return 'auto';
+    }
+
+    selectAllBtn.addEventListener('click', function() {
+      checkboxGrid.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = true; });
+    });
+    deselectAllBtn.addEventListener('click', function() {
+      checkboxGrid.querySelectorAll('input[type="checkbox"]').forEach(function(cb) { cb.checked = false; });
+    });
+
+    convertBtn.addEventListener('click', function() {
+      var selected = new Set();
+      checkboxGrid.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+        selected.add(cb.dataset.col);
+      });
+      if (!selected.size) { alert('Select at least one column to include.'); return; }
+
+      var typeMap = {};
+      typeTableBody.querySelectorAll('select[data-col]').forEach(function(sel) {
+        typeMap[sel.dataset.col] = sel.value;
+      });
+
+      var pk     = primaryKeySel.value;
+      var output = (pk === '__none__') ? buildArray(selected, typeMap) : buildDict(pk, selected, typeMap);
+
+      currentJSON = JSON.stringify(output, null, 2);
+      outputCode.innerHTML = syntaxHighlight(currentJSON);
+
+      var count = Array.isArray(output) ? output.length : Object.keys(output).length;
+      var shape = Array.isArray(output) ? 'records' : 'keys';
+      outputStat.textContent = count.toLocaleString() + ' ' + shape + ' · ' + selected.size + ' fields';
+
+      outputPanel.classList.add('visible');
+      setTimeout(function() {
+        outputPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    });
+
+    function castValue(rawVal, type) {
+      var v = (rawVal === undefined || rawVal === null) ? '' : rawVal;
+      if (type === 'string')  return String(v);
+      if (type === 'number')  { var n = Number(v); return isNaN(n) ? v : n; }
+      if (type === 'boolean') {
+        var lower = String(v).toLowerCase().trim();
+        if (lower === 'true'  || lower === '1' || lower === 'yes') return true;
+        if (lower === 'false' || lower === '0' || lower === 'no')  return false;
+        return v;
+      }
+      // auto
+      if (typeof v === 'number') return v;
+      if (typeof v === 'boolean') return v;
+      var s = String(v).trim();
+      if (s === '') return null;
+      if (!isNaN(s) && s !== '') return Number(s);
+      var sl = s.toLowerCase();
+      if (sl === 'true')  return true;
+      if (sl === 'false') return false;
+      return s;
+    }
+
+    function buildRow(rawRow, selected, typeMap) {
+      var obj = {};
+      selected.forEach(function(col) {
+        obj[col] = castValue(rawRow[col], typeMap[col] || 'auto');
+      });
+      return obj;
+    }
+
+    function buildArray(selected, typeMap) {
+      return parsedRows.map(function(row) { return buildRow(row, selected, typeMap); });
+    }
+
+    function buildDict(pk, selected, typeMap) {
+      var dict = {};
+      parsedRows.forEach(function(row) {
+        var keyVal = row[pk] !== undefined ? String(row[pk]) : '__undefined__';
+        dict[keyVal] = buildRow(row, selected, typeMap);
+      });
+      return dict;
+    }
+
+    copyBtn.addEventListener('click', async function() {
+      if (!currentJSON) return;
+      try {
+        await navigator.clipboard.writeText(currentJSON);
+      } catch (_) {
+        var ta = document.createElement('textarea');
+        ta.value = currentJSON;
+        ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      copyBtn.textContent = '✅ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(function() {
+        copyBtn.innerHTML = '📋 Copy JSON';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+      zdtKofi.show(document.getElementById('kofi-data-converter'));
+    });
+
+    function syntaxHighlight(json) {
+      var esc = json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return esc.replace(
+        /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|[{}\[\],:])/g,
+        function(match) {
+          var cls = 'j-num';
+          if (/^"/.test(match))           cls = /:$/.test(match) ? 'j-key' : 'j-str';
+          else if (/true|false/.test(match)) cls = 'j-bool';
+          else if (/null/.test(match))      cls = 'j-null';
+          else if (/[{}\[\],:]/.test(match)) cls = 'j-punct';
+          return '<span class="' + cls + '">' + match + '</span>';
+        }
+      );
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function escAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+  })();
+  </script>
+  </section>
+
+  <section id="mcp-skill-generator">
+  <style>
+    /* ── mcp-skill-generator component styles ── */
+    .suite-nav { overflow-x: auto; }
+    .suite-nav .suite-wordmark { white-space: nowrap; }
+    .suite-nav a.nav-link { white-space: nowrap; }
+    .page-header { max-width: 900px; }
+    .brand-lockup { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); }
+    .main-container { max-width: 900px; }
+    .step-badge {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--teal-dim); border: 1px solid var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--teal); flex-shrink: 0;
+    }
+    .context-area { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .context-area-header {
+      padding: 12px 16px; background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+    }
+    .context-area-header .card-icon { font-size: 15px; }
+    .context-area-header .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+    .context-area-header .card-hint { font-size: 11.5px; color: var(--text-muted); margin-left: auto; }
+    .drop-zone-inline {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      background: var(--bg-input); padding: 20px;
+      text-align: center; cursor: pointer; position: relative;
+      margin: 16px; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .drop-zone-inline:hover, .drop-zone-inline.dragging {
+      border-color: var(--teal); background: var(--bg-elevated); box-shadow: 0 0 0 3px var(--teal-glow);
+    }
+    .drop-zone-inline input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-zone-inline p { font-size: 12.5px; color: var(--text-muted); }
+    .drop-zone-inline p strong { color: var(--teal); }
+    .context-divider { display: flex; align-items: center; gap: 10px; padding: 0 16px 12px; color: var(--text-muted); font-size: 12px; }
+    .context-divider::before, .context-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    textarea {
+      width: 100%; background: var(--bg-input); border: none;
+      border-top: 1px solid var(--border); color: var(--text-primary);
+      font-family: var(--mono); font-size: 12px; line-height: 1.7;
+      padding: 16px; resize: vertical; min-height: 130px; outline: none;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    textarea::placeholder { color: var(--text-muted); font-family: var(--font); font-style: italic; }
+    textarea:focus { border-top-color: var(--teal); }
+    .toggle-group {
+      display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-lg);
+      overflow: hidden; width: fit-content;
+    }
+    .toggle-btn {
+      padding: 10px 20px; background: var(--bg-input); border: none;
+      color: var(--text-muted); font-family: var(--font); font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toggle-btn + .toggle-btn { border-left: 1px solid var(--border); }
+    .toggle-btn:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .toggle-btn.active-ts { background: var(--teal-glow); color: var(--teal); border-color: var(--teal-dim); }
+    .toggle-btn.active-py { background: var(--amber-glow); color: #fbbf24; }
+    .toggle-btn.active-skill { background: rgba(139,92,246,0.1); color: #a78bfa; }
+    .toggle-label { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+    .config-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-top: 12px; }
+    .config-card-header { padding: 13px 20px; background: var(--bg-elevated); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .config-card-header .card-icon { font-size: 14px; }
+    .config-card-header .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+    .config-card-body { padding: 18px 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+    input[type="text"] {
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text-primary);
+      font-family: var(--font); font-size: 13px; padding: 8px 12px;
+      outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    input[type="text"]:focus { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal-glow); }
+    input[type="text"]::placeholder { color: var(--text-muted); }
+    .params-header {
+      display: grid; grid-template-columns: 1.4fr 0.9fr 1.7fr 36px;
+      gap: 8px; margin-bottom: 8px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0 2px;
+    }
+    .param-row { display: grid; grid-template-columns: 1.4fr 0.9fr 1.7fr 36px; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .del-btn {
+      width: 32px; height: 32px; border-radius: var(--radius);
+      background: none; border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .del-btn:hover { color: #f87171; border-color: #7f1d1d; background: rgba(248,113,113,0.08); }
+    .add-param-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1px dashed var(--border);
+      color: var(--text-muted); font-family: var(--font); font-size: 12.5px;
+      padding: 7px 14px; border-radius: var(--radius); cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .add-param-btn:hover { color: var(--teal); border-color: var(--teal-dim); }
+    .proceed-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--text-secondary); font-family: var(--font); font-size: 13px;
+      font-weight: 600; padding: 10px 22px; border-radius: var(--radius);
+      cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .proceed-btn:hover { color: var(--teal); border-color: var(--teal-dim); background: var(--teal-glow); }
+    .generate-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--teal); color: #fff; border: none;
+      padding: 13px 30px; border-radius: var(--radius);
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      letter-spacing: 0.03em; cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+    .generate-btn:hover { background: var(--teal-bright); box-shadow: 0 4px 20px rgba(0,180,216,0.35); transform: translateY(-1px); }
+    .generate-btn:active { transform: translateY(0); }
+    .target-pill { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 600; }
+    .target-pill.ts  { color: var(--teal); background: var(--teal-glow); border: 1px solid var(--teal-dim); }
+    .target-pill.py  { color: #fbbf24; background: var(--amber-glow); border: 1px solid var(--amber-dim); }
+    .target-pill.skill { color: #a78bfa; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); }
+    .output-code { max-height: 480px; tab-size: 2; overflow: auto; }
+    .k { color: #cc99cd; } .s { color: #a3d977; } .c { color: #889296; font-style: italic; }
+    .f { color: #7ec8e3; } .o { color: var(--text-muted); } .y { color: #f0a070; } .h { color: #c8c080; }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .params-header { grid-template-columns: 1fr 1fr 36px; }
+      .params-header span:nth-child(3) { display: none; }
+      .param-row { grid-template-columns: 1fr 1fr 36px; }
+      .param-row input:nth-child(3) { display: none; }
+      .toggle-group { flex-direction: column; }
+      .toggle-btn + .toggle-btn { border-left: none; border-top: 1px solid var(--border); }
+    }
+  </style>
+    <!-- Suite Nav -->
+  <nav class="suite-nav" role="navigation" aria-label="Tool suite">
+    <a href="https://sidehustlers113-ux.github.io" class="suite-brand" aria-label="zerodatatools home">
+      <svg width="18" height="18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <mask id="nav-logo-mask">
+            <rect width="100" height="100" fill="white"/>
+            <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+            <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+          </mask>
+        </defs>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#nav-logo-mask)"/>
+      </svg>
+      <span class="suite-wordmark">zero.</span>
+    </a>
+    <span class="nav-divider">|</span>
+    <a href="https://sidehustlers113-ux.github.io/prompt-constructor/" class="nav-link" title="Visual Prompt Constructor">Prompt Constructor</a>
+    <span class="nav-divider">|</span>
+    <a href="https://sidehustlers113-ux.github.io/data-converter/" class="nav-link" title="CSV &amp; Excel to JSON Converter">Data Converter</a>
+    <span class="nav-divider">|</span>
+    <a href="https://sidehustlers113-ux.github.io/mcp-skill-generator/" class="nav-link active" aria-current="page" title="MCP Server &amp; Skill Generator">MCP &amp; Skill Gen</a>
+  </nav>
+
+  <!-- Header -->
+  <header class="page-header" role="banner">
+    <div class="brand-lockup">
+      <svg width="22" height="22" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <mask id="hdr-logo-mask">
+            <rect width="100" height="100" fill="white"/>
+            <line x1="15" y1="15" x2="50" y2="50" stroke="black" stroke-width="6" stroke-linecap="square"/>
+            <line x1="50" y1="50" x2="85" y2="85" stroke="black" stroke-width="6" stroke-linecap="square"/>
+          </mask>
+        </defs>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="#00B4D8" stroke-width="13" mask="url(#hdr-logo-mask)"/>
+      </svg>
+      <span class="eyebrow">zerodatatools &middot; Utility #3</span>
+    </div>
+    <h1>MCP Server <span>&amp; Skill</span> Scaffold Generator</h1>
+    <p class="subtitle">
+      Describe your tool. Configure your schema. Get production-ready TypeScript, Python (FastMCP), or Claude SKILL.md boilerplate &mdash; no LLM required.
+    </p>
+  </header>
+
+  <main class="main-container" role="main">
+
+    <!-- Step 1 -->
+    <div class="section-label">
+      <div class="step-badge">1</div>
+      <h2>Describe Your Tool</h2>
+    </div>
+    <div class="context-area">
+      <div class="context-area-header">
+        <span class="card-icon">📋</span>
+        <span class="card-title">Context Ingestion</span>
+        <span class="card-hint">Optional — paste API docs or describe intent</span>
+      </div>
+      <div class="drop-zone-inline" id="drop-zone" role="button" tabindex="0" aria-label="Drop a text or markdown file">
+        <input type="file" id="file-input" accept=".txt,.md,.json,.yaml,.yml" aria-label="Select documentation file" />
+        <p>📂 Drop a <strong>.txt</strong>, <strong>.md</strong>, or <strong>.json</strong> file for auto-extraction &nbsp;&middot;&nbsp; or skip and type below</p>
+      </div>
+      <div class="context-divider">or paste text directly</div>
+      <textarea id="context-input" placeholder="Paste API documentation, function signatures, or a plain-language description of what your tool should do…
+Example: 'A tool that searches a PostgreSQL database given a table name and a WHERE clause, returns matching rows as JSON, requires read-only credentials.'"></textarea>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="proceed-btn" id="proceed-btn" type="button">Continue to Configuration →</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="config-panel">
+      <div class="section-spacer"></div>
+      <div class="section-label">
+        <div class="step-badge">2</div>
+        <h2>Configure Scaffold</h2>
+      </div>
+
+      <!-- Target Toggle -->
+      <div class="config-card">
+        <div class="config-card-header">
+          <span class="card-icon">🎯</span>
+          <span class="card-title">Target Output Format</span>
+        </div>
+        <div class="config-card-body">
+          <div class="toggle-group" id="target-toggle" role="radiogroup" aria-label="Output format">
+            <button class="toggle-btn active-ts" data-target="ts" type="button" role="radio" aria-checked="true">
+              <span>⚡</span>
+              <span>
+                TypeScript / Node.js
+                <div class="toggle-label">@modelcontextprotocol/sdk + Zod</div>
+              </span>
+            </button>
+            <button class="toggle-btn" data-target="py" type="button" role="radio" aria-checked="false">
+              <span>🐍</span>
+              <span>
+                Python / FastMCP
+                <div class="toggle-label">fastmcp decorator pattern</div>
+              </span>
+            </button>
+            <button class="toggle-btn" data-target="skill" type="button" role="radio" aria-checked="false">
+              <span>🧠</span>
+              <span>
+                Claude SKILL.md
+                <div class="toggle-label">.claude/skills/ YAML frontmatter</div>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="config-card">
+        <div class="config-card-header">
+          <span class="card-icon">✏️</span>
+          <span class="card-title">Tool / Skill Details</span>
+        </div>
+        <div class="config-card-body">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="field-name">Tool / Skill Name</label>
+              <input type="text" id="field-name" placeholder="e.g. search_database" autocomplete="off" />
+            </div>
+            <div class="form-field">
+              <label for="field-server" id="field-server-label">Server / Package Name</label>
+              <input type="text" id="field-server" placeholder="e.g. my-db-server" autocomplete="off" />
+            </div>
+          </div>
+          <div class="form-row full" style="margin-top:12px;">
+            <div class="form-field">
+              <label for="field-desc">Description</label>
+              <input type="text" id="field-desc" placeholder="What this tool does — the LLM reads this to decide when to invoke it" autocomplete="off" />
+            </div>
+          </div>
+          <div class="form-row full" style="margin-top:12px; display:none;" id="skill-trigger-row">
+            <div class="form-field">
+              <label for="field-trigger">Skill Trigger Description <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(SKILL.md only)</span></label>
+              <input type="text" id="field-trigger" placeholder="e.g. Use when the user asks to query or search a database" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parameters -->
+      <div class="config-card" id="params-card">
+        <div class="config-card-header">
+          <span class="card-icon">⚙️</span>
+          <span class="card-title">Input Parameters</span>
+        </div>
+        <div class="config-card-body">
+          <div class="params-header">
+            <span>Name</span>
+            <span>Type</span>
+            <span>Description / Notes</span>
+            <span></span>
+          </div>
+          <div id="params-list"></div>
+          <button class="add-param-btn" id="add-param-btn" type="button">＋ Add parameter</button>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <div style="margin-top:20px;">
+        <button class="generate-btn" id="generate-btn" type="button">
+          <span>⚡</span> Generate Scaffold
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="output-panel">
+      <div class="section-label section-spacer">
+        <div class="step-badge">3</div>
+        <h2>Generated Scaffold</h2>
+      </div>
+      <div class="output-card">
+        <div class="output-header">
+          <div class="output-meta">
+            <span class="output-title">Output</span>
+            <span class="target-pill ts" id="target-pill">TypeScript</span>
+          </div>
+          <button class="copy-btn" id="copy-btn" type="button">📋 Copy Scaffold</button>
+        </div>
+        <div class="output-code" id="output-code" role="region" aria-label="Generated scaffold code" aria-live="polite"></div>
+      </div>
+      <div class="kofi-toast" id="kofi-mcp-skill-generator">
+        <div class="kofi-toast-inner">
+          <div class="kofi-toast-body">
+            <p>Saved you time? Keep it free.</p>
+            <small>zerodatatools is free, forever.</small>
+            <div class="kofi-btns">
+              <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">
+                <button class="kofi-btn-secondary">$1 tip</button>
+              </a>
+              <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">
+                <button class="kofi-btn-primary">$3 if it helped</button>
+              </a>
+            </div>
+          </div>
+          <button class="kofi-dismiss" onclick="zdtKofi.hide(this.closest('.kofi-toast'))">&times;</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="tool-footer">
+    <span>🔒 100% client-side &middot; no data transmitted</span>
+    <span>
+      <a href="https://x.com/zerodatatool" target="_blank" rel="noopener">@zerodatatool</a>
+      &middot;
+      <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">Ko-fi</a>
+    </span>
+  </footer>
+
+  <script>
+  (() => {
+    'use strict';
+
+    let currentTarget   = 'ts';
+    let paramCount      = 0;
+    let currentScaffold = '';
+
+    const dropZone     = document.getElementById('drop-zone');
+    const fileInput    = document.getElementById('file-input');
+    const contextInput = document.getElementById('context-input');
+    const proceedBtn   = document.getElementById('proceed-btn');
+    const configPanel  = document.getElementById('config-panel');
+    const targetToggle = document.getElementById('target-toggle');
+    const fieldName    = document.getElementById('field-name');
+    const fieldServer  = document.getElementById('field-server');
+    const fieldDesc    = document.getElementById('field-desc');
+    const fieldTrigger = document.getElementById('field-trigger');
+    const skillTrigRow = document.getElementById('skill-trigger-row');
+    const paramsList   = document.getElementById('params-list');
+    const addParamBtn  = document.getElementById('add-param-btn');
+    const generateBtn  = document.getElementById('generate-btn');
+    const outputPanel  = document.getElementById('output-panel');
+    const outputCode   = document.getElementById('output-code');
+    const targetPill   = document.getElementById('target-pill');
+    const copyBtn      = document.getElementById('copy-btn');
+    const serverLabel  = document.getElementById('field-server-label');
+
+    // File drop
+    ['dragenter', 'dragover'].forEach(function(ev) {
+      dropZone.addEventListener(ev, function(e) { e.preventDefault(); dropZone.classList.add('dragging'); });
+    });
+    ['dragleave', 'drop'].forEach(function(ev) {
+      dropZone.addEventListener(ev, function(e) { e.preventDefault(); dropZone.classList.remove('dragging'); });
+    });
+    dropZone.addEventListener('drop', function(e) {
+      var f = e.dataTransfer.files[0];
+      if (f) readTextFile(f);
+    });
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files[0]) readTextFile(fileInput.files[0]);
+    });
+    dropZone.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+
+    function readTextFile(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        contextInput.value = e.target.result;
+        autoExtract(e.target.result);
+      };
+      reader.readAsText(file);
+    }
+
+    // Auto-extract heuristics
+    function autoExtract(text) {
+      var namePat   = /(?:tool[_\s-]?name|function|def |async function|tool\(["'])([\w_-]+)/i;
+      var nameMatch = text.match(namePat);
+      if (nameMatch && !fieldName.value) {
+        fieldName.value = nameMatch[1].replace(/["']/g, '');
+      }
+      var descPat   = /"""([\s\S]*?)"""|\/\*\*([\s\S]*?)\*\/|description['":\s]+["'`]([^"'`\n]{10,})/i;
+      var descMatch = text.match(descPat);
+      if (descMatch && !fieldDesc.value) {
+        var raw = (descMatch[1] || descMatch[2] || descMatch[3] || '').trim();
+        if (raw) fieldDesc.value = raw.split('\n')[0].trim().slice(0, 120);
+      }
+      var paramPat = /\(([^)]{5,})\)/g;
+      var pm;
+      while ((pm = paramPat.exec(text)) !== null) {
+        var inner = pm[1];
+        var parts = inner.split(',');
+        parts.forEach(function(p) {
+          var trimmed   = p.trim();
+          var colonIdx  = trimmed.indexOf(':');
+          if (colonIdx === -1) return;
+          var pname = trimmed.slice(0, colonIdx).trim().replace(/[^a-zA-Z0-9_]/g, '');
+          var ptype = trimmed.slice(colonIdx + 1).trim().replace(/[=\s].*/, '').replace(/[^a-zA-Z0-9_|]/g, '');
+          if (pname && pname.length > 1 && pname !== 'self' && pname !== 'cls') {
+            addParam(pname, mapType(ptype), '');
+          }
+        });
+        break;
+      }
+    }
+
+    function mapType(raw) {
+      var t = raw.toLowerCase();
+      if (t.includes('int') || t.includes('number') || t.includes('float')) return 'number';
+      if (t.includes('bool')) return 'boolean';
+      if (t.includes('list') || t.includes('array')) return 'string[]';
+      return 'string';
+    }
+
+    // Proceed
+    proceedBtn.addEventListener('click', function() {
+      configPanel.classList.add('visible');
+      if (paramsList.children.length === 0) addParam('', 'string', '');
+      proceedBtn.style.display = 'none';
+      configPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Target toggle
+    targetToggle.querySelectorAll('.toggle-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        targetToggle.querySelectorAll('.toggle-btn').forEach(function(b) {
+          b.className = 'toggle-btn';
+          b.setAttribute('aria-checked', 'false');
+        });
+        var t = btn.dataset.target;
+        btn.classList.add(t === 'ts' ? 'active-ts' : t === 'py' ? 'active-py' : 'active-skill');
+        btn.setAttribute('aria-checked', 'true');
+        currentTarget = t;
+        skillTrigRow.style.display = t === 'skill' ? '' : 'none';
+        serverLabel.textContent = t === 'skill' ? 'Skill Category / Tag' : 'Server / Package Name';
+        fieldServer.placeholder  = t === 'skill' ? 'e.g. database, web, filesystem' : 'e.g. my-db-server';
+      });
+    });
+
+    // Parameters
+    addParamBtn.addEventListener('click', function() { addParam('', 'string', ''); });
+
+    function addParam(name, type, desc) {
+      var id   = ++paramCount;
+      var row  = document.createElement('div');
+      row.className  = 'param-row';
+      row.dataset.id = id;
+      var types = ['string', 'number', 'boolean', 'string[]', 'object'].map(function(t) {
+        return '<option value="' + t + '"' + (type === t ? ' selected' : '') + '>' + t + '</option>';
+      }).join('');
+      row.innerHTML =
+        '<input type="text" class="p-name" placeholder="param_name" value="' + escAttr(name) + '" autocomplete="off" />' +
+        '<select class="p-type">' + types + '</select>' +
+        '<input type="text" class="p-desc" placeholder="What this parameter does" value="' + escAttr(desc) + '" autocomplete="off" />' +
+        '<button class="del-btn" type="button" aria-label="Remove parameter">✕</button>';
+      row.querySelector('.del-btn').addEventListener('click', function() { row.remove(); });
+      paramsList.appendChild(row);
+    }
+
+    function getParams() {
+      return Array.from(paramsList.querySelectorAll('.param-row')).map(function(row) {
+        return {
+          name: row.querySelector('.p-name').value.trim().replace(/[^a-zA-Z0-9_]/g, '') || 'param',
+          type: row.querySelector('.p-type').value,
+          desc: row.querySelector('.p-desc').value.trim()
+        };
+      }).filter(function(p) { return p.name; });
+    }
+
+    // Generate
+    generateBtn.addEventListener('click', function() {
+      var name    = fieldName.value.trim().replace(/[^a-zA-Z0-9_]/g, '') || 'my_tool';
+      var server  = fieldServer.value.trim().replace(/[^a-zA-Z0-9_\-. ]/g, '') || 'my-server';
+      var desc    = fieldDesc.value.trim() || 'A tool that performs an action.';
+      var trigger = fieldTrigger.value.trim() || 'Use when the user asks to ' + name.replace(/_/g, ' ') + '.';
+      var params  = getParams();
+      var scaffold = '';
+
+      if      (currentTarget === 'ts')    scaffold = genTypeScript(name, server, desc, params);
+      else if (currentTarget === 'py')    scaffold = genPython(name, server, desc, params);
+      else                                scaffold = genSkillMd(name, server, desc, trigger, params);
+
+      currentScaffold = scaffold;
+      outputCode.innerHTML = currentTarget === 'skill'
+        ? highlightYaml(scaffold)
+        : highlightCode(scaffold, currentTarget);
+
+      targetPill.className   = 'target-pill ' + currentTarget;
+      targetPill.textContent =
+        currentTarget === 'ts'    ? 'TypeScript (MCP SDK)' :
+        currentTarget === 'py'    ? 'Python (FastMCP)'     :
+                                    'Claude SKILL.md';
+
+      outputPanel.classList.add('visible');
+      setTimeout(function() { outputPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+    });
+
+    // Scaffold generators
+    function genTypeScript(name, server, desc, params) {
+      var zodLines    = params.map(function(p) {
+        var zodType = tsTypeToZod(p.type);
+        var comment = p.desc ? '.describe(' + JSON.stringify(p.desc) + ')' : '';
+        return '    ' + p.name + ': ' + zodType + comment + ',';
+      });
+      var destructure = params.map(function(p) { return p.name; }).join(', ');
+      var resultLine  = params.length
+        ? 'const result = await your' + capitalize(name) + 'Logic({ ' + destructure + ' });'
+        : 'const result = await your' + capitalize(name) + 'Logic();';
+      var lines = [
+        '// ' + server + '/src/index.ts',
+        '// Generated by zerodatatools — MCP & Skill Generator',
+        '// Install:  npm install @modelcontextprotocol/sdk zod',
+        '//           npm install -D typescript @types/node',
+        '',
+        'import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";',
+        'import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";',
+        'import { z } from "zod";',
+        '',
+        'const server = new McpServer({',
+        '  name: ' + JSON.stringify(server) + ',',
+        '  version: "1.0.0",',
+        '});',
+        '',
+        '// ── Tool: ' + name + ' ───────────────────────────',
+        'server.registerTool(',
+        '  ' + JSON.stringify(name) + ',',
+        '  {',
+        '    title: ' + JSON.stringify(capitalize(name.replace(/_/g, ' '))) + ',',
+        '    description: ' + JSON.stringify(desc) + ',',
+      ];
+      if (params.length) {
+        lines.push('    inputSchema: {');
+        zodLines.forEach(function(l) { lines.push(l); });
+        lines.push('    },');
+      } else {
+        lines.push('    inputSchema: {},');
+      }
+      lines = lines.concat([
+        '  },',
+        '  async ({ ' + destructure + ' }) => {',
+        '    // TODO: implement your logic here',
+        '    ' + resultLine,
+        '',
+        '    return {',
+        '      content: [',
+        '        {',
+        '          type: "text",',
+        '          text: JSON.stringify(result, null, 2),',
+        '        },',
+        '      ],',
+        '    };',
+        '  }',
+        ');',
+        '',
+        '// ── Start server ──────────────────────────────',
+        'async function main() {',
+        '  const transport = new StdioServerTransport();',
+        '  await server.connect(transport);',
+        '  // IMPORTANT: use console.error() for logging — stdout is reserved for MCP protocol',
+        '  console.error(`MCP Server "' + server + '" running on stdio`);',
+        '}',
+        '',
+        'main().catch(console.error);',
+        '',
+        '// ── Claude Desktop config (claude_desktop_config.json) ──',
+        '// {',
+        '//   "mcpServers": {',
+        '//     "' + server + '": {',
+        '//       "command": "node",',
+        '//       "args": ["/path/to/' + server + '/dist/index.js"]',
+        '//     }',
+        '//   }',
+        '// }',
+      ]);
+      return lines.join('\n');
+    }
+
+    function genPython(name, server, desc, params) {
+      var pyParams     = params.map(function(p) { return p.name + ': ' + pyType(p.type); }).join(', ');
+      var argLines     = params.map(function(p) {
+        return '        ' + p.name + ' (' + pyType(p.type) + '): ' + (p.desc || 'Parameter description.');
+      });
+      var lines = [
+        '# ' + server + '/server.py',
+        '# Generated by zerodatatools — MCP & Skill Generator',
+        '# Install:  pip install fastmcp',
+        '#           or: uv add fastmcp',
+        '',
+        'from fastmcp import FastMCP',
+        '',
+        'mcp = FastMCP(name=' + JSON.stringify(server) + ')',
+        '',
+        '',
+        '@mcp.tool()',
+        'def ' + name + '(' + pyParams + ') -> str:',
+        '    """' + desc,
+      ];
+      if (params.length) {
+        lines.push('');
+        lines.push('    Args:');
+        argLines.forEach(function(l) { lines.push(l); });
+        lines.push('');
+        lines.push('    Returns:');
+        lines.push('        str: Result as a JSON string or plain text.');
+      }
+      lines.push('    """');
+      lines = lines.concat([
+        '    # TODO: implement your logic here',
+        '    result = {}  # replace with actual logic',
+        '    import json',
+        '    return json.dumps(result, indent=2)',
+        '',
+        '',
+        'if __name__ == "__main__":',
+        '    # stdio transport (default) — for Claude Desktop, Claude Code',
+        '    mcp.run()',
+        '    # For HTTP transport: mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)',
+        '',
+        '# ── Claude Desktop config (claude_desktop_config.json) ──',
+        '# {',
+        '#   "mcpServers": {',
+        '#     "' + server + '": {',
+        '#       "command": "python",',
+        '#       "args": ["/path/to/' + server + '/server.py"]',
+        '#     }',
+        '#   }',
+        '# }',
+      ]);
+      return lines.join('\n');
+    }
+
+    function genSkillMd(name, server, desc, trigger, params) {
+      var skillName = capitalize(name.replace(/_/g, ' '));
+      var tags      = server ? server.split(/[,\s]+/).filter(Boolean) : ['general'];
+      var lines = [
+        '---',
+        'name: ' + name,
+        'description: >-',
+        '  ' + desc,
+        '  ' + trigger,
+        'tags:',
+      ];
+      tags.forEach(function(t) { lines.push('  - ' + t.trim()); });
+      lines = lines.concat([
+        'version: 1.0.0',
+        '---',
+        '',
+        '# ' + skillName,
+        '',
+        '## Overview',
+        '',
+        desc,
+        '',
+        '## When to Use',
+        '',
+        trigger,
+        '',
+      ]);
+      if (params.length) {
+        lines.push('## Parameters');
+        lines.push('');
+        params.forEach(function(p) {
+          lines.push('- `' + p.name + '` *(' + p.type + ')*' + (p.desc ? ': ' + p.desc : ''));
+        });
+        lines.push('');
+      }
+      lines = lines.concat([
+        '## Instructions',
+        '',
+        '1. Validate all required inputs are present before proceeding.',
+      ]);
+      params.forEach(function(p, i) {
+        lines.push((i + 2) + '. Use the `' + p.name + '` parameter (' + p.type + ') to ' + (p.desc || 'perform the operation') + '.');
+      });
+      lines = lines.concat([
+        (params.length + 2) + '. Return a structured result. Include a brief summary of what was done.',
+        (params.length + 3) + '. If an error occurs, explain clearly what failed and suggest remediation.',
+        '',
+        '## Output Format',
+        '',
+        'Return a concise, structured response. If data is returned, present it in a readable format',
+        '(table, list, or code block as appropriate). Always confirm the action taken.',
+        '',
+        '## Notes',
+        '',
+        '- Do not make assumptions about missing required parameters — ask for clarification.',
+        '- Log significant actions if an audit trail is expected.',
+        '- Keep responses concise unless the user asks for detail.',
+        '',
+        '## Example Usage',
+        '',
+        '```',
+        params.length
+          ? name + '(' + params.map(function(p) { return p.name + '=' + sampleVal(p.type); }).join(', ') + ')'
+          : name + '()',
+        '```',
+      ]);
+      return lines.join('\n');
+    }
+
+    // Helpers
+    function tsTypeToZod(t) {
+      switch (t) {
+        case 'number':   return 'z.number()';
+        case 'boolean':  return 'z.boolean()';
+        case 'string[]': return 'z.array(z.string())';
+        case 'object':   return 'z.record(z.string(), z.unknown())';
+        default:         return 'z.string()';
+      }
+    }
+    function pyType(t) {
+      switch (t) {
+        case 'number':   return 'float';
+        case 'boolean':  return 'bool';
+        case 'string[]': return 'list[str]';
+        case 'object':   return 'dict';
+        default:         return 'str';
+      }
+    }
+    function sampleVal(t) {
+      switch (t) {
+        case 'number':   return '42';
+        case 'boolean':  return 'true';
+        case 'string[]': return '["item1", "item2"]';
+        case 'object':   return '{}';
+        default:         return '"example_value"';
+      }
+    }
+    function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+    // Syntax highlighter
+    function highlightCode(code, lang) {
+      var e = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      var out = e.replace(/(\/\/[^\n]*)/g, '<span class="c">$1</span>');
+      out = out.replace(/("(?:[^"\\]|\\.)*")/g, function(m) {
+        if (m.includes('<span')) return m;
+        return '<span class="s">' + m + '</span>';
+      });
+      var kws = lang === 'py'
+        ? ['from','import','def','async','await','return','if','else','elif','class','None','True','False','for','in','try','except','raise','with','as']
+        : ['import','from','const','let','var','async','await','function','return','if','else','new','true','false','null','undefined','type','interface','export','default','throw'];
+      kws.forEach(function(kw) {
+        out = out.replace(new RegExp('\\b(' + kw + ')\\b(?![^<]*>)', 'g'), '<span class="k">$1</span>');
+      });
+      out = out.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\s*\()(?![^<]*>)/g, function(m, n) {
+        if (['if','else','for','while','async','await','return','function','import','from'].includes(n)) return m;
+        return '<span class="f">' + n + '</span>';
+      });
+      return out;
+    }
+    function highlightYaml(code) {
+      var e   = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      var out = e;
+      out = out.replace(/^(---)/gm, '<span class="y">$1</span>');
+      out = out.replace(/^([a-zA-Z_][a-zA-Z0-9_]*)(:)/gm, '<span class="y">$1</span><span class="o">$2</span>');
+      out = out.replace(/^(#{1,3} .+)/gm, '<span class="h">$1</span>');
+      out = out.replace(/(`[^`]+`)/g, '<span class="s">$1</span>');
+      out = out.replace(/(```[\s\S]*?```)/g, '<span class="s">$1</span>');
+      out = out.replace(/^(\s*- )(.+)/gm, '<span class="o">$1</span>$2');
+      return out;
+    }
+
+    // Copy
+    copyBtn.addEventListener('click', async function() {
+      if (!currentScaffold) return;
+      try { await navigator.clipboard.writeText(currentScaffold); }
+      catch (_) {
+        var ta = document.createElement('textarea');
+        ta.value = currentScaffold;
+        ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      }
+      copyBtn.textContent = '✅ Copied!';
+      copyBtn.classList.add('copied');
+      setTimeout(function() { copyBtn.innerHTML = '📋 Copy Scaffold'; copyBtn.classList.remove('copied'); }, 2200);
+      zdtKofi.show(document.getElementById('kofi-mcp-skill-generator'));
+    });
+
+    function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+
+  })();
+  </script>
+  </section>
+</main>
+
+<footer id="site-footer">
+  zerodatatools &middot; No account. No server. No data. &nbsp;&middot;&nbsp;
+  <a href="https://x.com/zerodatatool" target="_blank" rel="noopener">@zerodatatool</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://ko-fi.com/N1T3225PG1" target="_blank" rel="noopener">Ko-fi</a>
+</footer>
+
+<!-- TODO: GoatCounter analytics — install once live domain is confirmed (A-030) -->
+
+<script>
+  // ── Routing ──────────────────────────────────────────────────────────────
+  const toolTitles = {
+    'home': '',
+    'prompt-constructor': 'Visual Prompt Constructor',
+    'data-converter': 'CSV & Excel → JSON',
+    'mcp-skill-generator': 'MCP & Skill Generator'
+  };
+  function showSection(id) {
+    document.querySelectorAll('main > section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const section = document.getElementById(id) || document.getElementById('home');
+    const btn = document.querySelector(`.nav-btn[data-section="${section.id}"]`);
+    if (section) section.classList.add('active');
+    if (btn) btn.classList.add('active');
+    const titleName = document.getElementById('tool-title-name');
+    if (titleName) titleName.textContent = toolTitles[section.id] || '';
+    if (section.id === 'home') {
+      document.body.classList.remove('tool-active');
+    } else {
+      document.body.classList.add('tool-active');
+    }
+    document.querySelectorAll('.mobile-menu-item').forEach(b => b.classList.toggle('active', b.dataset.section === section.id));
+    window.zdtHelp?.close();
+    window.zdtMobileMenu?.close();
+    window.scrollTo(0, 0);
+  }
+  function navigate(id) {
+    location.hash = id;
+    showSection(id);
+  }
+  window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '')));
+  document.querySelectorAll('.nav-btn').forEach(btn =>
+    btn.addEventListener('click', () => navigate(btn.dataset.section))
+  );
+  showSection(location.hash.replace('#', '') || 'home');
+
+  // ── Ko-fi toast (shared, frequency-controlled) ───────────────────────────
+  function shouldShowKofi() {
+    const now = Date.now();
+    const last = parseInt(localStorage.getItem('zdt_kofi_ts') || '0', 10);
+    if (sessionStorage.getItem('zdt_kofi_shown')) return false;
+    if (now - last < 86400000) return false;
+    return true;
+  }
+  function recordKofiShown() {
+    localStorage.setItem('zdt_kofi_ts', Date.now().toString());
+    sessionStorage.setItem('zdt_kofi_shown', '1');
+  }
+  function showKofiToast(toastEl) {
+    if (!shouldShowKofi()) return;
+    recordKofiShown();
+    toastEl.classList.add('visible');
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(() => hideKofiToast(toastEl), 12000);
+  }
+  function hideKofiToast(toastEl) {
+    toastEl.classList.remove('visible');
+  }
+  // Expose globally so each tool's copy handler can call it
+  window.zdtKofi = { show: showKofiToast, hide: hideKofiToast };
+
+  // Mobile menu
+  window.zdtMobileMenu = {
+    toggle() {
+      const menu = document.getElementById('mobile-menu');
+      const btn  = document.getElementById('mobile-menu-btn');
+      const open = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open);
+      btn.textContent = open ? '✕' : '☰';
+    },
+    close() {
+      const menu = document.getElementById('mobile-menu');
+      const btn  = document.getElementById('mobile-menu-btn');
+      menu.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = '☰';
+    },
+    go(id) {
+      this.close();
+      navigate(id);
+    }
+  };
+  // Update mobile menu active state when section changes
+  const _origShowSection = showSection;
+  // Sync mobile menu active items on navigate
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('mobile-menu');
+    if (menu.classList.contains('open') && !menu.contains(e.target) && e.target.id !== 'mobile-menu-btn') {
+      zdtMobileMenu.close();
+    }
+  });
+
+  // Help panel toggle (Prompt Constructor)
+  window.zdtHelp = {
+    toggle() {
+      const panel = document.getElementById('help-panel');
+      const btn   = document.getElementById('help-toggle');
+      const open  = panel.classList.toggle('open');
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      btn?.classList.toggle('active', open);
+    },
+    close() {
+      const panel = document.getElementById('help-panel');
+      const btn   = document.getElementById('help-toggle');
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+      btn?.classList.remove('active');
+    }
+  };
+</script>
+
+</body>
+</html>
