@@ -296,27 +296,27 @@
     /* Prompt Constructor — fit viewport below both fixed bars */
     #prompt-constructor #app { height: calc(100vh - 88px) !important; }
 
-    /* Help panel — right-side drawer */
-    #help-panel {
+    /* Help panel — right-side drawer (shared by all tools) */
+    #help-panel, #help-panel-dc, #help-panel-mcp {
       position: fixed; top: 88px; right: 0; bottom: 0; width: 320px;
       background: var(--bg-panel); border-left: 1px solid var(--border);
       z-index: 500; transform: translateX(100%);
       transition: transform 0.25s ease;
       overflow-y: auto; display: flex; flex-direction: column;
     }
-    #help-panel.open { transform: translateX(0); }
+    #help-panel.open, #help-panel-dc.open, #help-panel-mcp.open { transform: translateX(0); }
     .help-hdr {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 18px; border-bottom: 1px solid var(--border);
       font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
       text-transform: uppercase; color: var(--text-muted); flex-shrink: 0;
     }
-    #help-close {
+    #help-close, #help-close-dc, #help-close-mcp {
       background: none; border: none; color: var(--text-muted);
       font-size: 18px; cursor: pointer; line-height: 1; padding: 0;
       transition: color 0.15s;
     }
-    #help-close:hover { color: var(--text); }
+    #help-close:hover, #help-close-dc:hover, #help-close-mcp:hover { color: var(--text); }
     .help-section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
     .help-section h3 {
       font-size: 10px; font-weight: 700; color: var(--text-dim);
@@ -345,6 +345,17 @@
     }
     #help-toggle:hover { color: var(--teal); border-color: var(--teal-dim); }
     #help-toggle.active { color: var(--teal); border-color: var(--teal); background: var(--teal-glow); }
+    /* Help toggle button in tool title bar (Data Converter, MCP Generator) */
+    #tool-help-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+      align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      margin-left: auto;
+    }
+    #tool-help-btn:hover { color: var(--teal); border-color: var(--teal-dim); }
+    #tool-help-btn.active { color: var(--teal); border-color: var(--teal); background: var(--teal-glow); }
   </style>
 </head>
 <body>
@@ -381,6 +392,7 @@
 
 <div id="tool-title-bar" aria-live="polite">
   <span id="tool-title-name"></span>
+  <button id="tool-help-btn" aria-label="Help" style="display:none">?</button>
 </div>
 
 <main>
@@ -680,6 +692,63 @@
     <div class="help-section">
       <h3>Privacy</h3>
       <p>Runs entirely in your browser. No content is ever sent to a server. No account required. No telemetry of any kind.</p>
+    </div>
+  </div>
+
+  <!-- Help panel — Data Converter -->
+  <div id="help-panel-dc" aria-hidden="true" aria-label="Help">
+    <div class="help-hdr">
+      <span>Help — CSV &amp; Excel to JSON</span>
+      <button id="help-close-dc" onclick="zdtHelpDC.close()" aria-label="Close help">&times;</button>
+    </div>
+    <div class="help-section">
+      <h3>How to use</h3>
+      <p>Drop a CSV or Excel file onto the upload zone. The tool parses it locally using SheetJS — no upload to any server. Configure your schema, then click Convert.</p>
+    </div>
+    <div class="help-section">
+      <h3>Column types</h3>
+      <ul>
+        <li><span class="ht ht-role">Auto</span> Detects number, boolean, or string automatically</li>
+        <li><span class="ht ht-format">Number</span> Force-casts to float — empty cells become null</li>
+        <li><span class="ht ht-tone">Boolean</span> Maps true / false / yes / no / 1 / 0</li>
+        <li><span class="ht ht-custom">String</span> Keeps everything as text</li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>Output structure</h3>
+      <p><strong style="color:var(--text)">Array</strong> — default, outputs <code style="color:var(--teal);font-size:11px">[{&hellip;}, {&hellip;}]</code>.<br><br><strong style="color:var(--text)">Keyed</strong> — pick a primary-key column to index by: <code style="color:var(--teal);font-size:11px">{"key": {&hellip;}}</code></p>
+    </div>
+    <div class="help-section">
+      <h3>Privacy</h3>
+      <p>Your file is read by the browser's File API and never transmitted. No account. No logging. No telemetry.</p>
+    </div>
+  </div>
+
+  <!-- Help panel — MCP & Skill Generator -->
+  <div id="help-panel-mcp" aria-hidden="true" aria-label="Help">
+    <div class="help-hdr">
+      <span>Help — MCP &amp; Skill Generator</span>
+      <button id="help-close-mcp" onclick="zdtHelpMCP.close()" aria-label="Close help">&times;</button>
+    </div>
+    <div class="help-section">
+      <h3>How to use</h3>
+      <p>Optionally paste a description of your tool, click Continue, then fill in the name, description, and parameters. Choose a scaffold type and click Generate.</p>
+    </div>
+    <div class="help-section">
+      <h3>Scaffold types</h3>
+      <ul>
+        <li><span class="ht ht-role">TypeScript</span> MCP SDK server with Zod schema — Claude Desktop &amp; Claude Code</li>
+        <li><span class="ht ht-tone">Python</span> FastMCP decorator pattern — <code style="color:var(--teal);font-size:11px">pip install fastmcp</code></li>
+        <li><span class="ht ht-task">SKILL.md</span> Claude Code skill file — drop in <code style="color:var(--teal);font-size:11px">.claude/skills/</code></li>
+      </ul>
+    </div>
+    <div class="help-section">
+      <h3>Parameters</h3>
+      <p>Add one row per input. Name and type drive the schema. Description becomes a <code style="color:var(--teal);font-size:11px">.describe()</code> annotation (TypeScript) or docstring (Python).</p>
+    </div>
+    <div class="help-section">
+      <h3>Privacy</h3>
+      <p>All scaffold generation is deterministic and runs entirely in your browser. No tool description or parameter data is sent to any server. No LLM call is made.</p>
     </div>
   </div>
 
@@ -2535,8 +2604,23 @@ Example: 'A tool that searches a PostgreSQL database given a table name and a WH
     }
     document.querySelectorAll('.mobile-menu-item').forEach(b => b.classList.toggle('active', b.dataset.section === section.id));
     window.zdtHelp?.close();
+    window.zdtHelpDC?.close();
+    window.zdtHelpMCP?.close();
     window.zdtMobileMenu?.close();
     window.scrollTo(0, 0);
+    const helpBtn = document.getElementById('tool-help-btn');
+    if (helpBtn) {
+      if (section.id === 'data-converter') {
+        helpBtn.style.display = 'flex';
+        helpBtn.onclick = () => window.zdtHelpDC?.toggle();
+      } else if (section.id === 'mcp-skill-generator') {
+        helpBtn.style.display = 'flex';
+        helpBtn.onclick = () => window.zdtHelpMCP?.toggle();
+      } else {
+        helpBtn.style.display = 'none';
+        helpBtn.onclick = null;
+      }
+    }
   }
   function navigate(id) {
     location.hash = id;
@@ -2616,6 +2700,42 @@ Example: 'A tool that searches a PostgreSQL database given a table name and a WH
     close() {
       const panel = document.getElementById('help-panel');
       const btn   = document.getElementById('help-toggle');
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+      btn?.classList.remove('active');
+    }
+  };
+
+  // Help panel toggle (Data Converter)
+  window.zdtHelpDC = {
+    toggle() {
+      const panel = document.getElementById('help-panel-dc');
+      const btn   = document.getElementById('tool-help-btn');
+      const open  = panel.classList.toggle('open');
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      btn?.classList.toggle('active', open);
+    },
+    close() {
+      const panel = document.getElementById('help-panel-dc');
+      const btn   = document.getElementById('tool-help-btn');
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+      btn?.classList.remove('active');
+    }
+  };
+
+  // Help panel toggle (MCP Generator)
+  window.zdtHelpMCP = {
+    toggle() {
+      const panel = document.getElementById('help-panel-mcp');
+      const btn   = document.getElementById('tool-help-btn');
+      const open  = panel.classList.toggle('open');
+      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      btn?.classList.toggle('active', open);
+    },
+    close() {
+      const panel = document.getElementById('help-panel-mcp');
+      const btn   = document.getElementById('tool-help-btn');
       panel.classList.remove('open');
       panel.setAttribute('aria-hidden', 'true');
       btn?.classList.remove('active');
